@@ -26,6 +26,17 @@ Boston %>%
   ggplot(aes(x = medv, y = lstat)) + 
   geom_density_2d()
 
+# Draw a boxplot or a violin plot
+Boston %>% 
+  mutate(high_age = ifelse(age > 77, "high", "low")) %>% 
+  ggplot(aes(x = high_age, y = medv)) +
+  geom_boxplot()
+
+Boston %>% 
+  mutate(high_age = ifelse(age > 77, "high", "low")) %>% 
+  ggplot(aes(x = high_age, y = medv)) +
+  geom_violin()
+
 # Draw a correlation plot
 Boston %>% 
   cor() %>% 
