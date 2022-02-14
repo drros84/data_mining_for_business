@@ -128,5 +128,5 @@ colAUC(prediction_1, test_data$expensive, plotROC = TRUE)
 # has a low credit rating or not. Build a confusion matrix to show the results.
 # Push the results to github and create a pull request
 credit_dataset <- Credit %>% 
-  mutate(low_credit_rating = ifelse(Rating < 93, "low_rating", "other")) 
+  mutate(low_credit_rating = ifelse(Rating < 247, "low_rating", "other")) 
 
