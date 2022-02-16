@@ -143,3 +143,40 @@ colAUC(prediction_1, test_data$expensive, plotROC = TRUE)
 credit_dataset <- Credit %>% 
   mutate(low_credit_rating = ifelse(Rating < 93, "low_rating", "other")) 
 
+?credit_dataset
+
+head(credit_dataset)
+
+str(credit_dataset)
+
+summary(credit_dataset)
+
+credit_dataset <- Credit %>% 
+  
+  mutate(low_credit_rating = ifelse(Balance <= 460, "low", "other")) %>% 
+  mutate(low_credit_rating = as.factor(low_credit_rating))  
+set.seed(32)
+
+train_index <- sample(c(1:nrow(credit_dataset)),
+                      0.7 * nrow(credit_dataset))
+
+train_data <- credit_dataset[train_index, ]
+test_data <- credit_dataset[-train_index, ]
+
+logistic_model_1 <- glm(low_credit_rating ~ Income + Limit,
+                        data = train_data,
+                        family = "binomial")
+summary(logistic_model_1)
+
+
+prediction_1 <- predict(logistic_model_1,
+                        test_data, type = "response")
+
+predict_1_factor <- ifelse(prediction_1 > 0.5,
+                           "low", "other") %>% 
+  as.factor()
+
+confusionMatrix(test_data$low,
+                predict_1_factor)
+
+colAUC(prediction_1, test_data$low, plotROC = TRUE)
