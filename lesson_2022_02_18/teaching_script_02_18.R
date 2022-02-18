@@ -7,10 +7,18 @@ library(roxygen2)
 
 source("lesson_2022_02_18/chocolate_functions.R")
 
+# Set seed
 set.seed(1234)
 
+# Import data
 chocolate <- read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2022/2022-01-18/chocolate.csv')
 
+# Exploratory data analysis
+
+
+
+
+# Clean the data
 chocolate_clean <- chocolate %>% 
   mutate(obs_n = row_number()) %>% 
   mutate(high_rating = ifelse(rating >= 3.5, "high", "other")) %>% 
