@@ -1,4 +1,10 @@
-# Ani's file
+
+
+
+
+# Edgar file
+
+
 
 library(ISLR2)
 library(tidyverse)
@@ -105,7 +111,7 @@ confusionMatrix(test_data$expensive,
                 predict_1_factor)
 
 # Draw a ROC curve and calculate AUC
-colAUC(prediction_1, test_data$expensive, plotROC = TRUE)
+colAUC(prediction_1, test_data$expensive, plotROC = TRUE
 
 ##########################################
 # Train a model using 5-fold cross-validation
@@ -126,9 +132,32 @@ colAUC(prediction_1, test_data$expensive, plotROC = TRUE)
 # has a low credit rating or not. Build a confusion matrix to show the results.
 # Push the results to github and create a pull request
 credit_dataset <- Credit %>% 
-<<<<<<< HEAD:lesson_2022_02_11/teaching_script_ani2.R
-  mutate(low_credit_rating = ifelse(Rating < 247, "low_rating", "other")) 
-=======
-  mutate(low_credit_rating = ifelse(Rating < 247, "low_rating", "other")) 
+  
+  mutate(low_credit_rating = ifelse(Balance <= 460, "low", "other")) %>% 
+  mutate(low_credit_rating = as.factor(low_credit_rating))  
+set.seed(32)
 
->>>>>>> 83adec37a8eb6d90959a8bc3f428ff64aee61758:lesson_2022_02_11/teaching_script.R
+train_index <- sample(c(1:nrow(credit_dataset)),
+                      0.7 * nrow(credit_dataset))
+
+train_data <- credit_dataset[train_index, ]
+test_data <- credit_dataset[-train_index, ]
+
+logistic_model_1 <- glm(low_credit_rating ~ Income + Limit,
+                        data = train_data,
+                        family = "binomial")
+summary(logistic_model_1)
+
+
+prediction_1 <- predict(logistic_model_1,
+                        test_data, type = "response")
+
+predict_1_factor <- ifelse(prediction_1 > 0.5,
+                           "low", "other") %>% 
+  as.factor()
+
+confusionMatrix(test_data$low,
+                predict_1_factor)
+
+colAUC(prediction_1, test_data$low, plotROC = TRUE)
+

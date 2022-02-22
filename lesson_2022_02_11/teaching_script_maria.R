@@ -1,4 +1,6 @@
-# Ani's file
+
+
+#Maria's file
 
 library(ISLR2)
 library(tidyverse)
@@ -6,13 +8,19 @@ library(caret)
 library(caTools)
 library(corrplot)
 
+install.packages("caret")
+install.packages("caTools")
+install.packages("corrplot")
+
+?Boston
+
 ###########################################
 # Exploratory data analysis
 
 ?Boston
 
 # Examine the first 5 lines of the dataset
-head(Boston, 20)
+head(Boston)
 
 # Look at the data structure
 str(Boston)
@@ -36,10 +44,7 @@ Boston %>%
   geom_boxplot()
 
 Boston %>% 
-  # mutate(high_age = ifelse(age > 77, "high", "low")) %>% 
-  mutate(high_age = case_when(age > 90 ~ "high",
-                              age > 60 & age <=90 ~"medium",
-                              TRUE ~ "low")) %>% 
+  mutate(high_age = ifelse(age > 77, "high", "low")) %>% 
   ggplot(aes(x = high_age, y = medv)) +
   geom_violin()
 
@@ -51,21 +56,27 @@ Boston %>%
 ################################
 # Linear regression
 
-# Predict median value of owner-occupied homes using % of population with lower status and age of building
 predict_mdev_1 <- lm(medv ~ lstat + age, data = Boston)
+
+
+# Predict median value of owner-occupied homes using % of population with lower status and age of building
+
 
 # Question: which variables are significant?
 summary(predict_mdev_1)
 
 # Question: run the same regression with lstat and and rm. What changes?
+
 predict_medv_2 <- lm(medv ~ lstat + rm, data = Boston)
 
+
 # Question: which variables are significant?
+
 summary(predict_medv_2)
 
 # Question: which model is the best at explaining variation in house value?
-# Model 2 because the R squared is higher
 
+#model 2 R squared is higher
 ###################################################
 # Logistic regression
 
@@ -73,17 +84,21 @@ summary(predict_medv_2)
 # if medv is higher or equal to 25, and 0 otherwise
 Boston_expensive <- Boston %>% 
   mutate(expensive = ifelse(medv >= 25, "expensive", "other")) %>% 
-  mutate(expensive = as.factor(expensive))
+  mutate(expensive = as.factor(expensive))  
 
 set.seed(42)
-
 #Split the data between a training and a test set
-train_index <- sample(c(1:nrow(Boston_expensive)), 
-                      0.8 * nrow(Boston_expensive))
+train_index <- sample(c(1:nrow(Boston_expensive)),
+                        0.8 * nrow(Boston_expensive))
 
 train_data <- Boston_expensive[train_index, ]
 test_data <- Boston_expensive[-train_index, ]
+
+
+#go console head(train_index)
+
 # Now run a logistic regression of expensive depending on lstat and average number of rooms
+
 logistic_model_1 <- glm(expensive ~ lstat + rm,
                         data = train_data,
                         family = "binomial")
@@ -105,8 +120,8 @@ confusionMatrix(test_data$expensive,
                 predict_1_factor)
 
 # Draw a ROC curve and calculate AUC
-colAUC(prediction_1, test_data$expensive, plotROC = TRUE)
 
+colAUC(prediction_1, test_data$expensive, plotROC = TRUE)
 ##########################################
 # Train a model using 5-fold cross-validation
 
@@ -126,9 +141,5 @@ colAUC(prediction_1, test_data$expensive, plotROC = TRUE)
 # has a low credit rating or not. Build a confusion matrix to show the results.
 # Push the results to github and create a pull request
 credit_dataset <- Credit %>% 
-<<<<<<< HEAD:lesson_2022_02_11/teaching_script_ani2.R
-  mutate(low_credit_rating = ifelse(Rating < 247, "low_rating", "other")) 
-=======
-  mutate(low_credit_rating = ifelse(Rating < 247, "low_rating", "other")) 
+  mutate(low_credit_rating = ifelse(Rating < 93, "low_rating", "other")) 
 
->>>>>>> 83adec37a8eb6d90959a8bc3f428ff64aee61758:lesson_2022_02_11/teaching_script.R

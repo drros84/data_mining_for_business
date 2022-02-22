@@ -1,4 +1,6 @@
-# Ani's file
+
+
+# David's file
 
 library(ISLR2)
 library(tidyverse)
@@ -126,9 +128,5 @@ colAUC(prediction_1, test_data$expensive, plotROC = TRUE)
 # has a low credit rating or not. Build a confusion matrix to show the results.
 # Push the results to github and create a pull request
 credit_dataset <- Credit %>% 
-<<<<<<< HEAD:lesson_2022_02_11/teaching_script_ani2.R
-  mutate(low_credit_rating = ifelse(Rating < 247, "low_rating", "other")) 
-=======
   mutate(low_credit_rating = ifelse(Rating < 247, "low_rating", "other")) 
 
->>>>>>> 83adec37a8eb6d90959a8bc3f428ff64aee61758:lesson_2022_02_11/teaching_script.R
