@@ -1,0 +1,653 @@
+---
+title: "Data wrangling in the tidyverse"
+output: learnr::tutorial
+runtime: shiny_prerendered
+---
+
+```{r setup, include=FALSE}
+library(learnr)
+library(tidyverse)
+knitr::opts_chunk$set(echo = FALSE)
+
+mtcars <- mtcars %>% rownames_to_column(var = "car")
+
+```
+
+
+## Introduction
+
+This little tutorial is designed to help you practice manipulating data in R using the most useful functions from the Tidyverse. This tutorial was created using the ``learnr``package, so please make sure you install it before running this script. Note that you will be asked to write some code in the boxes. You will have the option of looking at the solution - please avoid looking at it before trying to write the code yourself. Also, the usual shortcuts in RStudio (such as ``%>%``) will not work here unfortunately, so you will have to write them manually.
+
+We will be using the ``mtcars`` dataset. First of all, examine the six five lines of the dataset using the `` head() `` function. Note that using ``head(mtcars)`` is equivalent to using ``mtcars %>% head()``:
+
+```{r head, exercise=TRUE}
+
+```
+
+```{r head-solution}
+
+head(mtcars)
+
+```
+
+** Note that you can view more columns by clicking on the arrow on the top right of the table **
+
+Note that you can also select a different number of lines. For example, this selects the top 3 lines:
+
+```{r headexample, echo = TRUE}
+
+mtcars %>% 
+  head(3)
+
+```
+
+## Arranging
+
+We can reorder the dataframe by ascending and descending order of a specific column by using the ``arrange()`` function, in which we put the name of the variable to sort by. You can also use the ``desc()`` function to arrange in descending order.
+
+### Examples
+
+For example, here we sort ``mtcars`` in increasing order of ``cyl``:
+
+```{r arrangeexample1, echo = TRUE}
+
+mtcars %>% 
+  arrange(cyl)
+
+```
+
+Here, we sort by decreasing order of ``cyl``:
+
+```{r arrangeexample2, echo = TRUE}
+
+mtcars %>% 
+  arrange(desc(cyl))
+
+```
+
+You can also sort using several columns. For example, here we sort by increasing order of ``cyl``, and then by decreasing order of ``hp``:
+
+```{r arrangeexample3, echo = TRUE}
+
+mtcars %>% 
+  arrange(cyl, desc(hp))
+
+```
+
+### Exercises
+
+Now your turn!
+
+Sort ``mtcars`` by **increasing** order of ``qsec``:
+
+```{r arrange1, exercise = TRUE}
+
+
+
+```
+
+```{r arrange1-solution}
+
+mtcars %>% 
+  arrange(qsec)
+
+```
+
+Now, arrange first by **decreasing** order of ``carb``, and then by **increasing** order of ``am``:
+
+```{r arrange2, exercise = TRUE}
+
+
+
+```
+
+```{r arrange2-solution}
+
+mtcars %>% 
+  arrange(desc(carb), am)
+
+```
+
+## Selecting columns
+
+To select columns in ``mtcars``, we simply use the ``select`` function with the names of columns we want to select. 
+
+### Examples
+
+For example:
+
+```{r selectexample, echo = TRUE}
+
+mtcars %>% 
+  select(mpg, gear)
+
+```
+
+### Exercises
+
+Now, you try to select the ``hp``and ``wt``columns from mtcars:
+
+```{r select, exercise = TRUE}
+
+
+
+```
+
+```{r select-solution}
+
+mtcars %>% 
+  select(hp, wt)
+
+```
+
+
+## Filtering rows
+
+To filter rows, we use the ``filter`` function with a condition inside it. For conditions, you may find the following commonly-used operators:
+
+* `` A == B ``: "A is equal to B"
+* `` A != B ``: "A is not equal to B"
+* `` A > B ``: "A is higher than B"
+* `` A >= B ``: "A is higher or equal to B"
+* `` A < B ``: "A is lower than B"
+* `` A <= B ``: "A is lower or equal to B"
+* `` str_detect(A, "B") ``: "the variable A contains contains the string "B"
+
+### Examples
+
+For example, the following code filters the data for values of ``carb``higher or equal to 2:
+
+```{r filterexample1, echo = TRUE}
+
+mtcars %>% 
+  filter(carb >= 2)
+
+```
+
+The following filters for values of ``car`` which contain the string "Merc":
+
+```{r filterexample2, echo = TRUE}
+
+mtcars %>% 
+  filter(str_detect(car, "Merc"))
+
+```
+
+You can also include multiple conditions as in this example: the following filters for values of ``car`` which contain the string "Merc" AND have ``carb``higher or equal to 2:
+
+```{r filterexample3, echo = TRUE}
+
+mtcars %>% 
+  filter(str_detect(car, "Merc"), carb >= 3)
+
+```
+
+The following filters for values of ``car`` which contain the string "Merc" OR have ``carb``higher or equal to 2:
+
+```{r filterexample4, echo = TRUE}
+
+mtcars %>% 
+  filter(str_detect(car, "Merc") | carb >= 2)
+
+```
+
+Note that you can also filter for a row where a variable is equal to several values using the ``%in%`` operator. For example, the following code filters for rows where ``cyl`` is equal to either 4 or 8:
+
+```{r filterexample5, echo = TRUE}
+
+mtcars %>% 
+  filter(cyl %in% c(4, 8))
+
+```
+
+### Exercises
+
+Your turn now:
+
+First, select the rows where ``mpg`` is lower than 20:
+
+```{r filter1, exercise = TRUE}
+
+
+
+```
+
+```{r filter1-solution}
+
+mtcars %>% 
+  filter(mpg < 20)
+
+```
+
+Next, select cars which are Toyota and a ``disp`` of over 100:
+
+```{r filter2, exercise = TRUE}
+
+
+
+```
+
+```{r filter2-solution}
+
+mtcars %>% 
+  filter(str_detect(car, "Toyota"), disp > 100)
+
+```
+
+
+Next, select rows ``vs``is NOT equal to 1:
+
+```{r filter3, exercise = TRUE}
+
+
+
+```
+
+```{r filter3-solution}
+
+mtcars %>% 
+  filter(vs != 1)
+
+```
+
+Next, filter to keep rows where ``carb`` is equal to either 1 or 4:
+
+```{r filter4, exercise = TRUE}
+
+
+
+```
+
+```{r filter4-solution}
+
+mtcars %>% 
+  filter(carb %in% c(1, 4))
+
+```
+
+Of course, you can combine commands sequentially. In the next exercise, we want to select the top 3 Mercedes cars by ``disp``, but only for those which have a value for ``vs``of 1. This is how you can do it:
+
+* Select the ``car`` and ``disp`` columns
+* Filter to keep rows where ``car`` contains "Merc" and ``disp`` is higher than 141
+* Order by **decreasing** order of ``disp``
+* Keep only the top 3 rows
+
+```{r filter5, exercise = TRUE}
+
+
+
+```
+
+```{r filter5-solution}
+
+mtcars %>% 
+  select(car, disp) %>% 
+  filter(str_detect(car, "Merc"), disp > 141) %>% 
+  arrange(desc(disp)) %>% 
+  head(3)
+
+```
+
+## Mutate
+
+The ``mutate()`` function can be used for two purposes:
+
+* To create new variables
+* To modify an existing variable
+
+You can also use the following useful summary statistics in combination with ``mutate()``:
+
+* ``mean()``: to calculate the mean
+* ``median()``: to calculate the median
+* ``sd()``: to calculate the standard deviation
+
+### Examples
+
+For example, the following code selects the ``car`` and ``gear`` columns, and then creates a new column called ``gear_times_two`` which multiplies ``gear`` by 2:
+
+```{r mutateexample1, echo = TRUE}
+
+mtcars %>% 
+  select(car, gear) %>% 
+  mutate(gear_times_two = gear * 2)
+
+```
+
+However, the following code does the same but does not create a new column, and instead, it modifies the ``gear`` column by multiplying it by 2:
+
+```{r mutateexample2, echo = TRUE}
+
+mtcars %>% 
+  select(car, gear) %>% 
+  mutate(gear = gear * 2)
+
+```
+
+The following code keeps only cars with a ``disp`` which is above average. We do that by:
+
+* Calculating the mean of ``disp``in a new column called ``mean_disp``. 
+* Filtering the rows to keep those where ``disp`` is higher than ``mean_disp``
+
+```{r mutateexample3, echo = TRUE}
+
+mtcars %>% 
+  mutate(mean_disp = mean(disp)) %>% 
+  filter(disp > mean_disp)
+
+```
+
+### Exercises
+
+Your turn now:
+
+First, write some code which creates a new column called ``cyl_minus_one`` which is equal to ``cyl`` minus one:
+
+```{r mutate1, exercise = TRUE}
+
+
+
+```
+
+```{r mutate1-solution}
+
+mtcars %>% 
+  mutate(cyl_minus_one = cyl - 1)
+
+```
+
+
+Next, modify the ``drat`` variable such that it is now equal to ``drat`` plus 5:
+
+```{r mutate2, exercise = TRUE}
+
+
+
+```
+
+```{r mutate2-solution}
+
+mtcars %>% 
+  mutate(drat = drat + 5)
+
+```
+
+
+Next, do the following in order:
+
+* Select the ``car``, ``cyl`` and ``gear`` variables
+* Filter to keep only ``gear`` higher than 3
+* Create a new variable called ``cyl_times_gear`` which is equal to cyl multiplied by gear
+* Sort by **increasing** order of ``cyl_times_gear``
+
+```{r mutate3, exercise = TRUE}
+
+
+
+```
+
+```{r mutate3-solution}
+
+mtcars %>% 
+  select(car, cyl, gear) %>% 
+  filter(gear > 3) %>% 
+  mutate(cyl_times_gear = cyl * gear) %>% 
+  arrange(cyl_times_gear)
+
+```
+
+
+Finally, create code that keeps only cars for which the ``wt`` variable is higher or equal to 2 standard deviations above average:
+
+```{r mutate4, exercise = TRUE}
+
+
+
+```
+
+```{r mutate4-solution}
+
+mtcars %>% 
+  mutate(mean_wt = mean(wt),
+         sd_wt = sd(wt)) %>% 
+  mutate(sd_wt_2 = sd_wt * 2) %>% 
+  mutate(limit = mean_wt + sd_wt_2) %>% 
+  filter(wt >= limit)
+
+```
+
+## Creating categorical data
+
+Sometimes we want to create a new categorical variable based on another variable's values. For example, we want to create a new variable that takes one value if ``disp`` is above 200, and another otherwise. You can do this very simply by using the ``ifelse()`` function:
+
+```{r catexample1, echo = TRUE}
+
+mtcars %>% 
+  mutate(disp_high = ifelse(disp > 200, "high", "other"))
+
+```
+
+
+What if you want to create more than 2 categories? For example, you want to create a variable called ``disp_cat`` with the following characteristics:
+
+* If ``disp`` is higher or equal to 300, then the value should be "high"
+* If ``disp`` is higher or equal to 200 but lower than 300, then the value should be "medium_high"
+* if ``disp`` is higher or equal to 100 but lower than 200, then the value should be "medium_low"
+* For all other values of ``disp``, the value should be "low"
+
+You can do that using the ``case_when()`` function as follows:
+
+```{r catexample2, echo = TRUE}
+
+mtcars %>% 
+  mutate(disp_cat = case_when(disp >= 300 ~ "high",
+                              disp >= 200 ~ "medium_high",
+                              disp >= 100 ~ "medium_low",
+                              TRUE ~ "low"))
+
+```
+
+
+### Exercises
+
+Create a variable called ``qsec_low`` that takes the value "low" if ``qsec`` if below 17, and "other" otherwise
+
+```{r cat1, exercise = TRUE}
+
+
+
+```
+
+```{r cat1-solution}
+
+mtcars %>% 
+  mutate(qsec_low = ifelse(qsec < 17, "low", "other"))
+
+```
+
+
+Next, create a variable called ``hp_cat`` that takes the following values:
+
+* If ``hp`` is higher or equal to 180, then the value should be "high"
+* If ``hp`` is higher or equal to 97 but lower than 180, then the value should be "medium"
+* For all other values of ``hp``, the value should be "low"
+
+```{r cat2, exercise = TRUE}
+
+
+
+```
+
+```{r cat2-solution}
+
+mtcars %>% 
+  mutate(hp_cat = case_when(hp >= 180 ~ "high",
+                            hp >= 97 ~ "medium",
+                            TRUE ~ "low"))
+
+```
+
+Finally, create a new variable called ``is_mercedes`` which takes the following values:
+
+* If ``car`` contains the string "Merc", then the value should be "mercedes"
+* For all other values of ``car``, the value should be "other"
+
+```{r cat3, exercise = TRUE}
+
+
+
+```
+
+```{r cat3-solution}
+
+mtcars %>% 
+  mutate(is_mercedes = case_when(str_detect(car, "Merc") ~ "is_mercedes",
+                                 TRUE ~ "other"))
+
+# You could of course achieve the same results with ifelse as there are only 2 categories:
+# mtcars %>% 
+#   mutate(is_mercedes = ifelse(str_detect(car, "Merc"),"is_mercedes", "other"))
+
+```
+
+## Group by + mutate
+
+You can use the ``group_by()`` followed by the ``mutate()`` functions in order to run calculations across specific groups. 
+
+### Examples
+
+For example, the following code selects the ``car``, ``cyl`` and ``hp``variables, and then calculates the average ``hp`` for each value of ``cyl`` and stores it into a new variable called ``avg_hp``. **Note that it is always good practice to use ``ungroup`` after you finish unsing ``group_by`` as it can create problems later on in your code otherwise**:
+
+```{r group_by_mutexample1, echo = TRUE}
+
+mtcars %>% 
+  select(car, cyl, hp) %>% 
+  group_by(cyl) %>% 
+  mutate(avg_hp = mean(hp)) %>% 
+  ungroup()
+
+```
+
+### Exercises
+
+For this exercise, we want to compare the cars that have a ``disp`` above the average for their make, but only for Toyota and Mercedes.
+
+You can do this with the following steps:
+
+* Create a new variable called ``car_cat`` which takes value "toyota" if ``car`` contains the string "Toyota", the value "mercedes" if ``car`` contains the string "Merc", and for all other values of ``car`` if takes the value "other"
+* Filter to keep only the rows where the variable ``car_cat`` is not equal to "other"
+* Group by ``car_cat``
+* Create a new variable called ``mean_disp`` that is the mean of ``disp`` for each category
+* Ungroup
+* Create a new variable called ``disp_min_mean`` which is equal to ``disp`` minus ``mean_disp``
+* Filter to keep only the rows where ``disp_min_mean`` is higher than 0
+
+```{r group_by_mut1, exercise = TRUE}
+
+
+
+```
+
+```{r group_by_mut1-solution}
+
+mtcars %>% 
+  mutate(car_cat = case_when(str_detect(car, "Toyota") ~ "toyota",
+                             str_detect(car, "Merc") ~ "mercedes",
+                             TRUE ~ "other")) %>% 
+  filter(car_cat != "other") %>% 
+  group_by(car_cat) %>% 
+  mutate(mean_disp = mean(disp)) %>% 
+  ungroup() %>% 
+  mutate(disp_min_mean = disp - mean_disp) %>% 
+  filter(disp_min_mean > 0)
+```
+
+## Group by + summarise
+
+You can also use the ``group_by()`` followed by the ``summarise()`` functions in order to run calculations across specific groups and return the summary. The ``summarise`` function works in a very similar way to ``mutate()`` except it only returns the summary calculations by group and nothing else. **Note that you can group by more than one variable if you want**.
+
+### Examples
+
+For example, the following code returns the average ``hp`` for each value of ``cyl``:
+
+```{r group_by_sumexample1, echo = TRUE}
+
+mtcars %>% 
+  group_by(cyl) %>% 
+  summarise(avg_hp = mean(hp)) %>% 
+  ungroup()
+
+```
+
+### Exercises
+
+Calculate the mean and median ``hp`` for two separate groups: those with an ``mpg`` above 20 and all other cars. You can do this by doing the following:
+
+* Use ``mutate()`` and ``ifelse()`` (or ``case_when()``) to create a new variable ``high_mpg`` that takes value "high" when ``mpg`` is above 20, and "other" otherwise
+* Group by ``high_mpg``
+* Use summarise to calculate the mean and the median of ``hp``
+* Ungroup
+
+```{r group_by_sum1, exercise = TRUE}
+
+
+
+```
+
+```{r group_by_sum1-solution}
+
+mtcars %>% 
+  mutate(high_mpg = ifelse(mpg > 20, "high", "other")) %>% 
+  group_by(high_mpg) %>% 
+  summarise(mean_hp = mean(hp),
+            median_hp = median(hp)) %>% 
+  ungroup()
+```
+
+
+Next, calculate the mean and standard deviation of ``disp``, but only for 3 car brands: Mazda, Mercedes and Toyota:
+
+```{r group_by_sum2, exercise = TRUE}
+
+
+
+```
+
+```{r group_by_sum2-solution}
+
+mtcars %>% 
+  mutate(cat_car = case_when(str_detect(car, "Mazda") ~ "mazda",
+                             str_detect(car, "Merc") ~ "mercedes",
+                             str_detect(car, "Toyota") ~ "toyota",
+                             TRUE ~ "other")) %>% 
+  filter(cat_car != "other") %>% 
+  group_by(cat_car) %>% 
+  summarise(mean_disp = mean(disp),
+            sd_disp = sd(disp)) %>% 
+  ungroup()
+```
+
+
+## Final challenge
+
+You work for an online car retail business and your boss asks whether a Mercedes car with a horsepower (variable ``hp``) higher or equal to average (for a Mercedes) is less efficient in fuel consumption (variable ``mpg``) than a Toyota. How would you do that?
+
+```{r challenge, exercise = TRUE}
+
+
+
+```
+
+```{r challenge-solution}
+
+mtcars %>% 
+  mutate(cat_car = case_when(str_detect(car, "Merc") ~ "mercedes",
+                             str_detect(car, "Toyota") ~ car,
+                             TRUE ~ "other")) %>% 
+  filter(cat_car != "other") %>% 
+  group_by(cat_car) %>% 
+  mutate(mean_hp = mean(hp)) %>% 
+  ungroup() %>% 
+  filter(hp >= mean_hp) %>% 
+  select(car, mpg)
+  
+```
