@@ -28,6 +28,7 @@ str(Boston)
 # Produce some summary statistics
 summary(Boston)
 
+
 # Look at the distribution of some variables of interest
 Boston %>% 
   ggplot(aes(x = medv)) + 
@@ -99,6 +100,7 @@ test_data <- Boston_expensive [train_index, ]
 # Now run a logistic regression of expensive depending on lstat and average number of rooms
 logistic_model_1 <- glm(expensive ~ lstat + rm,
                         data = train_data,
+                        
                         family = "binomial")
 
 # Question: which variables are significant?
