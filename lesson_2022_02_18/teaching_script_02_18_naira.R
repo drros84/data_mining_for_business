@@ -1,6 +1,3 @@
-install.packages("glmnet")
-install.packages("tidymodels")
-
 
 library(tidyverse)
 library(glmnet)
@@ -76,124 +73,124 @@ metrics_list <- metric_set(accuracy, precision, recall, roc_auc)
 
 
 ####################
-# Build a lasso model
+# Build a ridge model
 
 # Create the model, defining the package ("engine") and the mode ("classification" or "regression")
-lasso_model <- logistic_reg(penalty = tune(), mixture = 1) %>% 
+ridge_model <- logistic_reg(penalty = tune(), mixture = 0) %>% 
   set_engine("glmnet") %>% 
   set_mode("classification")
 
-lasso_grid <- grid_regular(penalty(), levels = 50)
+ridge_grid <- grid_regular(penalty(), levels = 50)
 
 # Create the workflow, that brings together the model and the recipe
-lasso_wf <- workflow() %>% 
-  add_model(lasso_model) %>% 
+ridge_wf <- workflow() %>% 
+  add_model(ridge_model) %>% 
   add_recipe(chocolate_recipe)
 
 # Fit the workflow to the cross-validation groups
-lasso_cv_results <- lasso_wf %>% 
+ridge_cv_results <- ridge_wf %>% 
   tune_grid(resamples = chocolate_folds,
-            grid = lasso_grid,
+            grid = ridge_grid,
             metrics = metrics_list)
 
 # Plot the hyperparameter tuning
-lasso_cv_results %>% 
+ridge_cv_results %>% 
   plot_tuning_metrics(hyperparameter = "penalty", multiple = FALSE) +
   scale_x_log10()
 
 # Show the top 5 best models by AUC
-lasso_cv_results %>% 
+ridge_cv_results %>% 
   show_best(metric = "roc_auc")
 
 # Select the model wit the best AUC
-best_lasso_model <- lasso_cv_results %>% 
+best_ridge_model <- ridge_cv_results %>% 
   select_best(metric = "roc_auc") 
 
 # Fit the best model to the data
-lasso_final_fit <- lasso_wf %>% 
-  finalize_workflow(best_lasso_model) %>% 
+ridge_final_fit <- ridge_wf %>% 
+  finalize_workflow(best_ridge_model) %>% 
   last_fit(split = chocolate_split)
 
 # Collect the predictions
-lasso_predictions <- lasso_final_fit %>% 
+ridge_predictions <- ridge_final_fit %>% 
   collect_predictions()
 
 # Draw a heatmap for the confusion matrix:
-conf_mat(lasso_predictions,
+conf_mat(ridge_predictions,
          truth = high_rating,
          estimate = .pred_class) %>% 
   # Create a heat map
   autoplot(type = "heatmap")
 
 # Draw a ROC curve
-lasso_predictions %>% 
+ridge_predictions %>% 
   roc_curve(truth = high_rating, .pred_high) %>% 
   autoplot()
 
 # Calculate metrics
-lasso_final_perf <- metrics_list(lasso_predictions,
+ridge_final_perf <- metrics_list(ridge_predictions,
                                  truth = high_rating,
                                  estimate = .pred_class,
                                  .pred_high)
 
-lasso_final_perf
+ridge_final_perf
 
-# Build a rifge regression model
+# Build a ridge regression model
 
 # Create the model, defining the package ("engine") and the mode ("classification" or "regression")
-lasso_model <- logistic_reg(penalty = tune(), mixture = 1) %>% 
+ridge_model <- logistic_reg(penalty = tune(), mixture = 1) %>% 
   set_engine("glmnet") %>% 
   set_mode("classification")
 
-lasso_grid <- grid_regular(penalty(), levels = 50)
+ridge_grid <- grid_regular(penalty(), levels = 50)
 
 # Create the workflow, that brings together the model and the recipe
-lasso_wf <- workflow() %>% 
-  add_model(lasso_model) %>% 
+ridge_wf <- workflow() %>% 
+  add_model(ridge_model) %>% 
   add_recipe(chocolate_recipe)
 
 # Fit the workflow to the cross-validation groups
-lasso_cv_results <- lasso_wf %>% 
+ridge_cv_results <- ridge_wf %>% 
   tune_grid(resamples = chocolate_folds,
-            grid = lasso_grid,
+            grid = ridge_grid,
             metrics = metrics_list)
 
 # Plot the hyperparameter tuning
-lasso_cv_results %>% 
+ridge_cv_results %>% 
   plot_tuning_metrics(hyperparameter = "penalty", multiple = FALSE) +
   scale_x_log10()
 
 # Show the top 5 best models by AUC
-lasso_cv_results %>% 
+ridge_cv_results %>% 
   show_best(metric = "roc_auc")
 
 # Select the model wit the best AUC
-best_lasso_model <- lasso_cv_results %>% 
+best_ridge_model <- ridge_cv_results %>% 
   select_best(metric = "roc_auc") 
 
 # Fit the best model to the data
-lasso_final_fit <- lasso_wf %>% 
-  finalize_workflow(best_lasso_model) %>% 
+ridge_final_fit <-ridge_wf %>% 
+  finalize_workflow(best_ridge_model) %>% 
   last_fit(split = chocolate_split)
 
 # Collect the predictions
-lasso_predictions <- lasso_final_fit %>% 
+ridge_predictions <- ridge_final_fit %>% 
   collect_predictions()
 
 # Draw a heatmap for the confusion matrix:
-conf_mat(lasso_predictions,
+conf_mat(ridge_predictions,
          truth = high_rating,
          estimate = .pred_class) %>% 
   # Create a heat map
   autoplot(type = "heatmap")
 
 # Draw a ROC curve
-lasso_predictions %>% 
+ridge_predictions %>% 
   roc_curve(truth = high_rating, .pred_high) %>% 
   autoplot()
 
 # Calculate metrics
-lasso_final_perf <- metrics_list(lasso_predictions,
+ridge_final_perf <- metrics_list(ridge_predictions,
                                  truth = high_rating,
                                  estimate = .pred_class,
                                  .pred_high)
