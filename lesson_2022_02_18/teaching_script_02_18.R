@@ -4,6 +4,9 @@ library(glmnet)
 library(tidymodels)
 library(roxygen2)
 # library(finetune)
+install.packages("tidyverse")
+install.packages("glmnet")
+install.packages("tidymodels")
 
 source("lesson_2022_02_18/chocolate_functions.R")
 
@@ -14,9 +17,37 @@ set.seed(1234)
 chocolate <- read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2022/2022-01-18/chocolate.csv')
 
 # Exploratory data analysis
+summary(chocolate)
+str(chocolate)
 
+chocolate %>% 
+  ggplot(aes(x = rating)) + 
+  geom_density()
 
+chocolate %>% 
+  count(country_of_bean_origin) %>% 
+  ggplot(aes(x = reorder(country_of_bean_origin, n), y = n)) +
+  geom_col()
 
+chocolate %>% 
+  count(country_of_bean_origin) %>% 
+  arrange(desc(n)) %>% 
+  head(20) %>% 
+  ggplot(aes(x = reorder(country_of_bean_origin, n), y = n)) +
+  geom_col(fill = "pink") +
+  coord_flip()+
+  theme_bw()+
+  xlab("country")
+
+chocolate %>% 
+  count(company_location) %>% 
+  arrange(desc(n)) %>% 
+  head(20) %>% 
+  ggplot(aes(x = reorder(company_location, n), y = n)) +
+  geom_col(fill = "pink") +
+  coord_flip()+
+  theme_bw()+
+  xlab("country")
 
 # Clean the data
 chocolate_clean <- chocolate %>% 
@@ -31,6 +62,9 @@ chocolate_clean <- chocolate %>%
   clean_review_dates() %>% 
   select(-ref, -specific_bean_origin_or_bar_name, -cocoa_percent, -rating, -obs_n)
 
+view(chocolate_clean)
+
+dim(chocolate_clean)
 
 # Split the data between training and testing, assigning 80% to training and 20% to testing.
 # Additionally, stratify by the predictor variable to ensure there are roughly similar shares
@@ -50,7 +84,7 @@ chocolate_folds <- vfold_cv(train, v = 5,
 chocolate_recipe <- recipe(high_rating ~ ., data = chocolate_clean) 
 
 # Create a list of performance metrics
-metrics_list <- metric_set(accuracy, precision, recall, roc_auc)
+metrics_list <- metric_set(roc_auc)
 
 ####################
 # Build a lasso model
