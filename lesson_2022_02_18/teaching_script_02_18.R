@@ -14,10 +14,43 @@ set.seed(1234)
 chocolate <- read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2022/2022-01-18/chocolate.csv')
 
 # Exploratory data analysis
+head(chocolate)
+str(chocolate)
+summary(chocolate)
+chocolate %>% 
+  ggplot(aes(x = rating)) + 
+  geom_histogram()
+
+chocolate %>% 
+  select(rating, cocoa_percent)
+  ggplot(aes(x = rating)) + 
+  geom_density()
+
+chocolate %>%
+  count (country_of_bean_origin) %>%
+  arrange(desc(n)) %>%
+  head(20)%>%
+  ggplot(aes(x=reorder(country_of_bean_origin, n), y = n)) +
+  geom_col(fill = "gold") +
+  coord_flip() +
+  theme_bw() +
+  xlab("country") +
+  ylab("Number of observation")
+
+chocolate %>%
+  count (company_location) %>%
+  arrange(desc(n)) %>%
+  head(20)%>%
+  ggplot(aes(x=reorder(company_location, n), y = n)) +
+  geom_col(fill = "gold") +
+  coord_flip() +
+  theme_bw() +
+  xlab("country") +
+  ylab("Number of observation")
 
 
 
-
+  
 # Clean the data
 chocolate_clean <- chocolate %>% 
   mutate(obs_n = row_number()) %>% 
@@ -112,3 +145,5 @@ lasso_final_perf <- metrics_list(lasso_predictions,
                                  truth = high_rating,
                                  estimate = .pred_class,
                                  .pred_high)
+
+lasso_final_perf
