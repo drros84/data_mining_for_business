@@ -6,5 +6,13 @@ compile_pdf_state="{\"tab_visible\":false,\"running\":false,\"target_file\":\"\"
 files.monitored-path=""
 find-in-files-state="{\"handle\":\"\",\"input\":\"\",\"path\":\"\",\"regex\":false,\"ignoreCase\":false,\"results\":{\"file\":[],\"line\":[],\"lineValue\":[],\"matchOn\":[],\"matchOff\":[],\"replaceMatchOn\":[],\"replaceMatchOff\":[]},\"running\":false,\"replace\":false,\"preview\":false,\"gitFlag\":false,\"replacePattern\":\"\"}"
 imageDirtyState="1"
-portToken="8ea58877db6b"
+<<<<<<< HEAD
+<<<<<<< HEAD
+portToken="ab45a474a2b6"
+=======
+portToken="1a8369e9bd78"
+>>>>>>> 42eed790438f9e7dc1211c7686833711ea6fc454
+=======
+portToken="23ca2f085b7a"
+>>>>>>> a1652c685e56c6932184f9a250f529b60b281493
 saveActionState="-1"
