@@ -173,6 +173,8 @@ Look at the structure of the data using the ``str()`` function:
 
 ```{r intro_3, exercise=TRUE}
 
+
+
 ```
 
 ```{r intro_3-solution}
