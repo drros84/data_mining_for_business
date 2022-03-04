@@ -1,3 +1,6 @@
+install.packages("glmnet")
+install.packages("tidymodels")
+
 
 library(tidyverse)
 library(glmnet)
@@ -15,6 +18,7 @@ chocolate <- read_csv('https://raw.githubusercontent.com/rfordatascience/tidytue
 
 # Exploratory data analysis
 <<<<<<< HEAD
+<<<<<<< HEAD
 summary(chocolate)
 
 chocolate %>% 
@@ -22,7 +26,19 @@ chocolate %>%
   ggplot(aes(x= reorder(country_of_bean_origin,n), y=n))+
   geom_col()
 =======
+=======
+head(chocolate)
+>>>>>>> a1652c685e56c6932184f9a250f529b60b281493
 
+str(chocolate)
+
+<<<<<<< HEAD
+summary(chocolate)
+chocolate %>% 
+  count(country_of_bean_origin) %>% 
+ggplot(aes(x = reorder (country_of_bean_origin, n), y = n))+
+  geom_col()
+=======
 # Plot the top 20 countries of bean origin by number of observations
 >>>>>>> 42eed790438f9e7dc1211c7686833711ea6fc454
 chocolate %>% 
@@ -41,7 +57,19 @@ chocolate %>%
   theme_bw() +
   xlab("country") +
   ylab("Number of observations")
+>>>>>>> 42eed790438f9e7dc1211c7686833711ea6fc454
 
+chocolate %>% 
+  count(country_of_bean_origin) %>%
+  arrange(desc(n)) %>% 
+  head(20) %>% 
+  ggplot(aes(x=reorder(country_of_bean_origin, n), y=n))+
+  geom_col(fill = "darkblue")+
+coord_flip()+
+  theme_bw()+
+  xlab("country")+
+  ylab("Number of Observations")
+  
 
 # Plot the top 20 countries of bean origin by company location
 chocolate %>% 
@@ -113,6 +141,7 @@ chocolate_recipe <- recipe(high_rating ~ ., data = chocolate_clean)
 
 # Create a list of performance metrics
 metrics_list <- metric_set(accuracy, precision, recall, roc_auc)
+
 
 ####################
 # Build a lasso model
@@ -212,6 +241,30 @@ lasso_cv_results %>%
 =======
 lasso_final_perf
 
+<<<<<<< HEAD
+# Build a rifge regression model
+
+# Create the model, defining the package ("engine") and the mode ("classification" or "regression")
+lasso_model <- logistic_reg(penalty = tune(), mixture = 1) %>% 
+  set_engine("glmnet") %>% 
+  set_mode("classification")
+
+lasso_grid <- grid_regular(penalty(), levels = 50)
+
+# Create the workflow, that brings together the model and the recipe
+lasso_wf <- workflow() %>% 
+  add_model(lasso_model) %>% 
+  add_recipe(chocolate_recipe)
+
+# Fit the workflow to the cross-validation groups
+lasso_cv_results <- lasso_wf %>% 
+  tune_grid(resamples = chocolate_folds,
+            grid = lasso_grid,
+            metrics = metrics_list)
+
+# Plot the hyperparameter tuning
+lasso_cv_results %>% 
+=======
 
 ####################
 # Build a ridge regression model
@@ -296,15 +349,21 @@ ridge_predictions %>%
 # Calculate metrics
 <<<<<<< HEAD
 lasso_final_perf <- metrics_list(lasso_predictions,
+<<<<<<< HEAD
                                  truth = high_rating,
                                  estimate = .pred_class,
                                  .pred_high)
 =======
+>>>>>>> a1652c685e56c6932184f9a250f529b60b281493
+=======
 ridge_final_perf <- metrics_list(ridge_predictions,
+>>>>>>> 42eed790438f9e7dc1211c7686833711ea6fc454
                                  truth = high_rating,
                                  estimate = .pred_class,
                                  .pred_high)
 
+<<<<<<< HEAD
+=======
 
 
 
