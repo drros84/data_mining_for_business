@@ -39,11 +39,11 @@ turbines %>%
 
 dev.off()
 
-jpeg(file="david/hub_height_hist.jpeg")
+jpeg(file="david/hub_height_density.jpeg")
 
 turbines_recoded %>% 
   ggplot(aes(x = hub_height_m)) +
-  geom_histogram()
+  geom_density()
 
 dev.off()
 

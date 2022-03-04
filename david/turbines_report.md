@@ -11,8 +11,8 @@ You can include charts saved as images, such as this density plot of rotor diame
 #### Density plot for rotor diameter
 ![](rotor_diameter_density.jpeg)
 
-#### Historgram of hub heights
-![](hub_heist_hist.jpeg)
+#### Histogram of hub heights
+![](hub_heist_density.jpeg)
 
 You can find more on how to use markdown language in [here](https://www.markdownguide.org/cheat-sheet/)
 
