@@ -1,9 +1,19 @@
-## Neural network report
+# Neural network report
 
-This is an example of the kind of thing you can do with markdown.
+## Introduction
+
+This document reports the result of a neural network model on the wind turbines data
+
+## Exploratory data analysis
+
+You can include charts in an rmarkdown file as follows:
+
+![](rotor_diameter_density.jpeg)
+
+You can find more on how to use markdown language in [here](https://www.markdownguide.org/cheat-sheet/)
 
 ## Results
 
 You can include a plot as follow:
 
-![Confusion matrix for our neural network](nn_conf_matrix1.jpeg)
+![](nn_conf_matrix1.jpeg)
