@@ -7,8 +7,10 @@ library(tidyverse)
 library(tidymodels)
 library(tabnet)
 library(torch)
+library(parallel)
 
 
+cores <- detectCores()
 set.seed(1234)
 
 source("ani/plot_tuning_metrics.R")
@@ -34,12 +36,19 @@ turbines_recoded <- turbines_df %>%
 # Save a density plot of rotor diameter
 jpeg(file="ani/rotor_diameter_density.jpeg")
 
-turbines %>% 
+turbines_recoded %>% 
   ggplot(aes(x = rotor_diameter_m)) +
   geom_density()
 
 dev.off()
 
+#jpeg(file="ani/rotor_diameter_density.jpeg")
+
+#turbines_recoded %>% 
+  #ggplot(aes(x = hub_height_m)) +
+  #geom_density()
+
+#dev.off()
 #########################################################
 # Start here                                            #
 #########################################################
