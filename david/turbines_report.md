@@ -6,14 +6,17 @@ This document reports the result of a neural network model on the wind turbines 
 
 ## Exploratory data analysis
 
-You can include charts in an rmarkdown file as follows:
+You can include charts saved as images, such as this density plot of rotor diameter:
 
 ![](rotor_diameter_density.jpeg)
 
 You can find more on how to use markdown language in [here](https://www.markdownguide.org/cheat-sheet/)
 
+For example, you can make text **bold** or *italic*, and you can even create lists:
+
+* First item
+* Second item
+* Third item
+
 ## Results
 
-You can include a plot as follow:
-
-![](nn_conf_matrix1.jpeg)
