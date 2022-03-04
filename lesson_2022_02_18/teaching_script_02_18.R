@@ -1,3 +1,6 @@
+install.packages("glmnet")
+install.packages("tidymodels")
+
 
 library(tidyverse)
 library(glmnet)
@@ -14,7 +17,17 @@ set.seed(1234)
 chocolate <- read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2022/2022-01-18/chocolate.csv')
 
 # Exploratory data analysis
+head(chocolate)
 
+str(chocolate)
+
+<<<<<<< HEAD
+summary(chocolate)
+chocolate %>% 
+  count(country_of_bean_origin) %>% 
+ggplot(aes(x = reorder (country_of_bean_origin, n), y = n))+
+  geom_col()
+=======
 # Plot the top 20 countries of bean origin by number of observations
 chocolate %>% 
   count(country_of_bean_origin) %>% 
@@ -26,7 +39,19 @@ chocolate %>%
   theme_bw() +
   xlab("country") +
   ylab("Number of observations")
+>>>>>>> 42eed790438f9e7dc1211c7686833711ea6fc454
 
+chocolate %>% 
+  count(country_of_bean_origin) %>%
+  arrange(desc(n)) %>% 
+  head(20) %>% 
+  ggplot(aes(x=reorder(country_of_bean_origin, n), y=n))+
+  geom_col(fill = "darkblue")+
+coord_flip()+
+  theme_bw()+
+  xlab("country")+
+  ylab("Number of Observations")
+  
 
 # Plot the top 20 countries of bean origin by company location
 chocolate %>% 
@@ -94,6 +119,7 @@ chocolate_recipe <- recipe(high_rating ~ ., data = chocolate_clean)
 # Create a list of performance metrics
 metrics_list <- metric_set(accuracy, precision, recall, roc_auc)
 
+
 ####################
 # Build a lasso model
 
@@ -157,6 +183,30 @@ lasso_final_perf <- metrics_list(lasso_predictions,
 
 lasso_final_perf
 
+<<<<<<< HEAD
+# Build a rifge regression model
+
+# Create the model, defining the package ("engine") and the mode ("classification" or "regression")
+lasso_model <- logistic_reg(penalty = tune(), mixture = 1) %>% 
+  set_engine("glmnet") %>% 
+  set_mode("classification")
+
+lasso_grid <- grid_regular(penalty(), levels = 50)
+
+# Create the workflow, that brings together the model and the recipe
+lasso_wf <- workflow() %>% 
+  add_model(lasso_model) %>% 
+  add_recipe(chocolate_recipe)
+
+# Fit the workflow to the cross-validation groups
+lasso_cv_results <- lasso_wf %>% 
+  tune_grid(resamples = chocolate_folds,
+            grid = lasso_grid,
+            metrics = metrics_list)
+
+# Plot the hyperparameter tuning
+lasso_cv_results %>% 
+=======
 
 ####################
 # Build a ridge regression model
@@ -180,10 +230,31 @@ ridge_cv_results <- ridge_wf %>%
             metrics = metrics_list)
 
 ridge_cv_results %>% 
+>>>>>>> 42eed790438f9e7dc1211c7686833711ea6fc454
   plot_tuning_metrics(hyperparameter = "penalty", multiple = FALSE) +
   scale_x_log10()
 
 # Show the top 5 best models by AUC
+<<<<<<< HEAD
+lasso_cv_results %>% 
+  show_best(metric = "roc_auc")
+
+# Select the model wit the best AUC
+best_lasso_model <- lasso_cv_results %>% 
+  select_best(metric = "roc_auc") 
+
+# Fit the best model to the data
+lasso_final_fit <- lasso_wf %>% 
+  finalize_workflow(best_lasso_model) %>% 
+  last_fit(split = chocolate_split)
+
+# Collect the predictions
+lasso_predictions <- lasso_final_fit %>% 
+  collect_predictions()
+
+# Draw a heatmap for the confusion matrix:
+conf_mat(lasso_predictions,
+=======
 ridge_cv_results %>% 
   show_best(metric = "roc_auc")
 
@@ -202,22 +273,33 @@ ridge_predictions <- ridge_final_fit %>%
 
 # Draw a heatmap for the confusion matrix:
 conf_mat(ridge_predictions,
+>>>>>>> 42eed790438f9e7dc1211c7686833711ea6fc454
          truth = high_rating,
          estimate = .pred_class) %>% 
   # Create a heat map
   autoplot(type = "heatmap")
 
 # Draw a ROC curve
+<<<<<<< HEAD
+lasso_predictions %>% 
+=======
 ridge_predictions %>% 
+>>>>>>> 42eed790438f9e7dc1211c7686833711ea6fc454
   roc_curve(truth = high_rating, .pred_high) %>% 
   autoplot()
 
 # Calculate metrics
+<<<<<<< HEAD
+lasso_final_perf <- metrics_list(lasso_predictions,
+=======
 ridge_final_perf <- metrics_list(ridge_predictions,
+>>>>>>> 42eed790438f9e7dc1211c7686833711ea6fc454
                                  truth = high_rating,
                                  estimate = .pred_class,
                                  .pred_high)
 
+<<<<<<< HEAD
+=======
 
 
 
@@ -300,3 +382,4 @@ enet_final_perf %>%
   bind_rows(ridge_final_perf %>% mutate(model = "ridge")) %>% 
   filter(.metric == "roc_auc") %>% 
   arrange(desc(.estimate))
+>>>>>>> 42eed790438f9e7dc1211c7686833711ea6fc454
