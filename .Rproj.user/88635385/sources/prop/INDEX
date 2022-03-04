@@ -1,4 +1,13 @@
+<<<<<<< HEAD
+<<<<<<< HEAD
+~%2Fdata_mining_for_business%2F.gitignore="552BF6EE"
+~%2Fdata_mining_for_business%2Fgit_instructions.md="B7F6F377"
+~%2Fdata_mining_for_business%2Flesson_2022_02_11%2Fteaching_script.R="7BDB1AE8"
+~%2Fdata_mining_for_business%2Flesson_2022_02_11%2Fteaching_script_david.R="7EB7FBC1"
+=======
+=======
 ~%2Fdata_mining_for_business%2F.Rproj.user%2F88635385%2Fpersistent-state="D1F21850"
+>>>>>>> a1652c685e56c6932184f9a250f529b60b281493
 ~%2Fdata_mining_for_business%2F.Rproj.user%2Fshared%2Fnotebooks%2Fpaths="7FC2D7DC"
 ~%2Fdata_mining_for_business%2F.gitignore="552BF6EE"
 ~%2Fdata_mining_for_business%2Fani%2Fneural_network.R="82996DF9"
@@ -29,6 +38,7 @@
 ~%2Fdata_mining_for_business%2Flesson_2022_02_11%2Fteaching_script_edgar_HW.R="F2D3B65D"
 ~%2Fdata_mining_for_business%2Flesson_2022_02_11%2Fteaching_script_naira.R="3D2B3851"
 ~%2Fdata_mining_for_business%2Flesson_2022_02_18%2Fchocolate_functions.R="AADB913A"
+>>>>>>> 42eed790438f9e7dc1211c7686833711ea6fc454
 ~%2Fdata_mining_for_business%2Flesson_2022_02_18%2Fteaching_script_02_18.R="1FA8DC4F"
 ~%2Fdata_mining_for_business%2Flesson_2022_02_18%2Fteaching_script_02_18_naira.R="2E41DA7D"
 ~%2Fdata_mining_for_business%2Fmaria%2Fneural_network.R="6A339639"
