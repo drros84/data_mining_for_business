@@ -67,10 +67,13 @@ metrics_list <- metric_set(accuracy, precision, recall, roc_auc)
 # * Tune the following hyperparameter: `learn_rate``;
 # * Use the ``torch`` package;
 
-nn_model <- tabnet(learn_rate = tune(), num_steps = tune()) %>% 
-  set_engine("torch") %>% 
-  set_mode("classification")
+cores <- parallel::detectCores()
 
+
+
+nn_model <- tabnet(learn_rate = tune(), num_steps = tune()) %>% 
+  set_engine("torch", num.threads = cores) %>% 
+  set_mode("classification")
 
 # Create a workflow:
 
@@ -92,11 +95,16 @@ nn_grid <- grid_random(parameters(learn_rate(), num_steps() %>% range_set(c(2, 6
 
 # Tune your hyperparameters:
 
+start <- Sys.time()
+
 nn_cv_results <- nn_wf %>% 
   tune_grid(resamples = turbines_folds,
             grid = nn_grid,
             metrics = metrics_list)
 
+end <- Sys.time()
+
+end - start
 
 # Plot the performance for different values of ``learn_rate`` using the ``plot_tuning_metrics()`` function:
 
@@ -157,4 +165,7 @@ nn_final_perf <- metrics_list(nn_predictions,
 # Print your final performance metrics:
 
 nn_final_perf
+
+
+
 
