@@ -1,0 +1,14 @@
+name: decision_trees_random_forests
+title: decision_trees_random_forests
+username:
+account: drros84
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 5738563
+bundleId: 5620275
+url: https://drros84.shinyapps.io/decision_trees_random_forests/
+when: 1645874047.99769
+lastSyncTime: 1645874047.99776
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: data_wrangling_in_tidyverse.html|data_wrangling_in_tidyverse.Rmd|decision_trees_random_forests_files/figure-html/apply_best-example3-1.png|decision_trees_random_forests_files/figure-html/plot_perf-example1-1.png|decision_trees_random_forests.html|plot_tuning_metrics.R

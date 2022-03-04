@@ -1,3 +1,6 @@
+install.packages("glmnet")
+install.packages("tidymodels")
+
 
 library(tidyverse)
 library(glmnet)
@@ -17,6 +20,7 @@ set.seed(1234)
 chocolate <- read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2022/2022-01-18/chocolate.csv')
 
 # Exploratory data analysis
+<<<<<<< HEAD
 summary(chocolate)
 str(chocolate)
 
@@ -29,16 +33,53 @@ chocolate %>%
   ggplot(aes(x = reorder(country_of_bean_origin, n), y = n)) +
   geom_col()
 
+=======
+head(chocolate)
+
+str(chocolate)
+
+<<<<<<< HEAD
+summary(chocolate)
+chocolate %>% 
+  count(country_of_bean_origin) %>% 
+ggplot(aes(x = reorder (country_of_bean_origin, n), y = n))+
+  geom_col()
+=======
+# Plot the top 20 countries of bean origin by number of observations
+>>>>>>> a1652c685e56c6932184f9a250f529b60b281493
 chocolate %>% 
   count(country_of_bean_origin) %>% 
   arrange(desc(n)) %>% 
   head(20) %>% 
   ggplot(aes(x = reorder(country_of_bean_origin, n), y = n)) +
+<<<<<<< HEAD
   geom_col(fill = "pink") +
   coord_flip()+
   theme_bw()+
   xlab("country")
 
+=======
+  geom_col(fill = "darkblue") +
+  coord_flip() +
+  theme_bw() +
+  xlab("country") +
+  ylab("Number of observations")
+>>>>>>> 42eed790438f9e7dc1211c7686833711ea6fc454
+
+chocolate %>% 
+  count(country_of_bean_origin) %>%
+  arrange(desc(n)) %>% 
+  head(20) %>% 
+  ggplot(aes(x=reorder(country_of_bean_origin, n), y=n))+
+  geom_col(fill = "darkblue")+
+coord_flip()+
+  theme_bw()+
+  xlab("country")+
+  ylab("Number of Observations")
+  
+
+# Plot the top 20 countries of bean origin by company location
+>>>>>>> a1652c685e56c6932184f9a250f529b60b281493
 chocolate %>% 
   count(company_location) %>% 
   arrange(desc(n)) %>% 
@@ -85,6 +126,7 @@ chocolate_recipe <- recipe(high_rating ~ ., data = chocolate_clean)
 
 # Create a list of performance metrics
 metrics_list <- metric_set(roc_auc)
+
 
 ####################
 # Build a lasso model
@@ -148,7 +190,37 @@ lasso_final_perf <- metrics_list(lasso_predictions,
                                  .pred_high)
 
 
+<<<<<<< HEAD
 # Build a ridge model
+=======
+<<<<<<< HEAD
+# Build a rifge regression model
+
+# Create the model, defining the package ("engine") and the mode ("classification" or "regression")
+lasso_model <- logistic_reg(penalty = tune(), mixture = 1) %>% 
+  set_engine("glmnet") %>% 
+  set_mode("classification")
+
+lasso_grid <- grid_regular(penalty(), levels = 50)
+
+# Create the workflow, that brings together the model and the recipe
+lasso_wf <- workflow() %>% 
+  add_model(lasso_model) %>% 
+  add_recipe(chocolate_recipe)
+
+# Fit the workflow to the cross-validation groups
+lasso_cv_results <- lasso_wf %>% 
+  tune_grid(resamples = chocolate_folds,
+            grid = lasso_grid,
+            metrics = metrics_list)
+
+# Plot the hyperparameter tuning
+lasso_cv_results %>% 
+=======
+
+####################
+# Build a ridge regression model
+>>>>>>> a1652c685e56c6932184f9a250f529b60b281493
 
 # Create the model, defining the package ("engine") and the mode ("classification" or "regression")
 lasso_model <- logistic_reg(penalty = tune(), mixture = 0) %>% 
@@ -168,12 +240,21 @@ lasso_cv_results <- lasso_wf %>%
             grid = lasso_grid,
             metrics = metrics_list)
 
+<<<<<<< HEAD
 # Plot the hyperparameter tuning
 lasso_cv_results %>% 
+=======
+ridge_cv_results %>% 
+>>>>>>> 42eed790438f9e7dc1211c7686833711ea6fc454
+>>>>>>> a1652c685e56c6932184f9a250f529b60b281493
   plot_tuning_metrics(hyperparameter = "penalty", multiple = FALSE) +
   scale_x_log10()
 
 # Show the top 5 best models by AUC
+<<<<<<< HEAD
+lasso_cv_results %>% 
+=======
+<<<<<<< HEAD
 lasso_cv_results %>% 
   show_best(metric = "roc_auc")
 
@@ -192,20 +273,148 @@ lasso_predictions <- lasso_final_fit %>%
 
 # Draw a heatmap for the confusion matrix:
 conf_mat(lasso_predictions,
+=======
+ridge_cv_results %>% 
+>>>>>>> a1652c685e56c6932184f9a250f529b60b281493
+  show_best(metric = "roc_auc")
+
+# Select the model wit the best AUC
+best_lasso_model <- lasso_cv_results %>% 
+  select_best(metric = "roc_auc") 
+
+# Fit the best model to the data
+lasso_final_fit <- lasso_wf %>% 
+  finalize_workflow(best_lasso_model) %>% 
+  last_fit(split = chocolate_split)
+
+# Collect the predictions
+lasso_predictions <- lasso_final_fit %>% 
+  collect_predictions()
+
+# Draw a heatmap for the confusion matrix:
+<<<<<<< HEAD
+conf_mat(lasso_predictions,
+=======
+conf_mat(ridge_predictions,
+>>>>>>> 42eed790438f9e7dc1211c7686833711ea6fc454
+>>>>>>> a1652c685e56c6932184f9a250f529b60b281493
          truth = high_rating,
          estimate = .pred_class) %>% 
 # Create a heat map
 autoplot(type = "heatmap")
 
 # Draw a ROC curve
+<<<<<<< HEAD
 lasso_predictions %>% 
+=======
+<<<<<<< HEAD
+lasso_predictions %>% 
+=======
+ridge_predictions %>% 
+>>>>>>> 42eed790438f9e7dc1211c7686833711ea6fc454
+>>>>>>> a1652c685e56c6932184f9a250f529b60b281493
   roc_curve(truth = high_rating, .pred_high) %>% 
   autoplot()
 
 # Calculate metrics
+<<<<<<< HEAD
 lasso_final_perf <- metrics_list(lasso_predictions,
+=======
+<<<<<<< HEAD
+lasso_final_perf <- metrics_list(lasso_predictions,
+=======
+ridge_final_perf <- metrics_list(ridge_predictions,
+>>>>>>> 42eed790438f9e7dc1211c7686833711ea6fc454
+>>>>>>> a1652c685e56c6932184f9a250f529b60b281493
                                  truth = high_rating,
                                  estimate = .pred_class,
                                  .pred_high)
 
+<<<<<<< HEAD
+=======
 
+<<<<<<< HEAD
+=======
+
+
+####################
+# Build a elasticnet model
+
+# Create the model, defining the package ("engine") and the mode ("classification" or "regression")
+enet_model <- logistic_reg(penalty = tune(), mixture = tune()) %>% 
+  set_engine("glmnet") %>% 
+  set_mode("classification")
+
+enet_grid <- grid_random(parameters(penalty(), mixture()), size = 50)
+
+# Create the workflow, that brings together the model and the recipe
+enet_wf <- workflow() %>% 
+  add_model(enet_model) %>% 
+  add_recipe(chocolate_recipe)
+
+# Split the training data into 5 groups for 5-fold cross-validation
+enet_folds <- vfold_cv(train, v = 5,
+                       strata = high_rating)
+
+
+# Fit the workflow to the cross-validation groups
+enet_cv_results <- enet_wf %>% 
+  tune_grid(resamples = enet_folds,
+            grid = enet_grid,
+            metrics = metrics_list)
+
+# Plot performance by hyperparameter
+enet_cv_results %>% 
+  plot_tuning_metrics(hyperparameter = "penalty", multiple = TRUE) +
+  scale_x_log10()
+
+# Plot performance by hyperparameter
+enet_cv_results %>% 
+  plot_tuning_metrics(hyperparameter = "mixture", multiple = TRUE) +
+  scale_x_log10()
+
+# Show the top 5 best models by AUC
+enet_cv_results %>% 
+  show_best(metric = "roc_auc")
+
+# Select the model wit the best AUC
+best_enet_model <- enet_cv_results %>% 
+  select_best(metric = "roc_auc") 
+
+# Fit the best model to the data
+enet_final_fit <- enet_wf %>% 
+  finalize_workflow(best_enet_model) %>% 
+  last_fit(split = chocolate_split)
+
+# Collect the predictions
+enet_predictions <- enet_final_fit %>% 
+  collect_predictions()
+
+# Draw a heatmap for the confusion matrix:
+conf_mat(enet_predictions,
+         truth = high_rating,
+         estimate = .pred_class) %>% 
+  # Create a heat map
+  autoplot(type = "heatmap")
+
+# Draw a ROC curve
+enet_predictions %>% 
+  roc_curve(truth = high_rating, .pred_high) %>% 
+  autoplot()
+
+# Calculate metrics
+enet_final_perf <- metrics_list(enet_predictions,
+                                truth = high_rating,
+                                estimate = .pred_class,
+                                .pred_high)
+
+
+# Combine all the predictions and find the model with the higher AUC
+enet_final_perf %>% 
+  mutate(model = "elasticnet") %>% 
+  bind_rows(lasso_final_perf %>% mutate(model = "lasso")) %>% 
+  bind_rows(ridge_final_perf %>% mutate(model = "ridge")) %>% 
+  filter(.metric == "roc_auc") %>% 
+  arrange(desc(.estimate))
+>>>>>>> 42eed790438f9e7dc1211c7686833711ea6fc454
+>>>>>>> a1652c685e56c6932184f9a250f529b60b281493
