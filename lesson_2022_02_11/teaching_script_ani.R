@@ -1,5 +1,3 @@
-
-
 # David's file
 
 library(ISLR2)
@@ -128,38 +126,4 @@ colAUC(prediction_1, test_data$expensive, plotROC = TRUE)
 # has a low credit rating or not. Build a confusion matrix to show the results.
 # Push the results to github and create a pull request
 credit_dataset <- Credit %>% 
-  mutate(low_credit_rating = ifelse(Rating < 247, "low_rating", "other")) %>% 
-  mutate(low_credit_rating = as.factor(low_credit_rating))
-
-train_index <- sample(c(1:nrow(credit_dataset)), 
-                      0.8 * nrow(credit_dataset))
-
-train_data <- credit_dataset [train_index, ]
-test_data <- credit_dataset[-train_index, ]
-
-dim(train_data)
-dim(test_data)
-# Now run a logistic regression of expensive depending on lstat and average number of rooms
-logistic_model_1 <- glm(low_credit_rating ~ Income + Limit,
-                        data = train_data,
-                        family = "binomial")
-
-# Question: which variables are significant?
-summary(logistic_model_1)
-
-# Predict whether an area is expensive or not for our test data
-prediction_1 <- predict(logistic_model_1,
-                        test_data, type = "response")
-
-# Convert predictions to factors to compare with real values
-predict_1_factor <- ifelse(prediction_1 > 0.5,
-                           "low_rating", "other") %>% 
-  as.factor()
-
-# Create a confusion matrix - how good is the prediction?
-confusionMatrix(test_data$low_credit_rating,
-                predict_1_factor)
-
-# Draw a ROC curve and calculate AUC
-colAUC(prediction_1, test_data$low_credit_rating, plotROC = TRUE)
-
+  mutate(low_credit_rating = ifelse(Rating < 247, "low_rating", "other")) 
