@@ -3,7 +3,7 @@ title: "Decision trees and random forests"
 output: learnr::tutorial
 runtime: shiny_prerendered
 ---
-
+install.packages("learnr)
 ```{r setup, include=FALSE}
 library(learnr)
 library(tidyverse)
