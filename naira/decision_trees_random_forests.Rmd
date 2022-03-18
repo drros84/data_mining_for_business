@@ -56,7 +56,7 @@ dt_wf <- workflow() %>%
 turbines_folds <- vfold_cv(train, v = 3,
                             strata = "turbine_capacity")
 
-dt_grid <- grid_random(parameters(tree_depth(), min_n()), size = 20)
+dt_grid <- grid_random(parameters(tree_depth(), min_n()), size = 5)
 
 dt_cv_results <- dt_wf %>% 
   tune_grid(resamples = turbines_folds,
@@ -89,7 +89,7 @@ rf_wf <- workflow() %>%
 
 rf_grid <- grid_random(
   parameters(mtry() %>% range_set(c(4, 12)), trees(), min_n()), 
-  size = 20)
+  size = 5)
 
 rf_cv_results <- rf_wf %>% 
   tune_grid(resamples = turbines_folds,
@@ -138,7 +138,7 @@ We will first examine the dataset.
 Explore the first 6 lines of the data using the ``head()`` function on ``turbines_df``:
 
 ```{r intro_1, exercise=TRUE}
-
+head(turbines_df)
 ```
 
 ```{r intro_1-solution}
@@ -150,7 +150,7 @@ head(turbines_df)
 Look a the number of observations in the dataset using ``dim()``:
 
 ```{r intro_2, exercise=TRUE}
-
+dim(turbines_df)
 ```
 
 ```{r intro_2-solution}
@@ -172,7 +172,7 @@ question("How many rows and columns are there in the dataframe?",
 Look at the structure of the data using the ``str()`` function:
 
 ```{r intro_3, exercise=TRUE}
-
+str(turbines_df)
 ```
 
 ```{r intro_3-solution}
@@ -324,7 +324,7 @@ chocolate_recipe <- recipe(high_rating ~ ., data = chocolate_clean)
 Modify the code above to create a "recipe" for predicting ``turbine_capacity`` using all other columns of the ``turbines_recoded`` dataframe as features. Save the result as ``turbines_recipe``.
 
 ```{r create_recipe1, exercise=TRUE}
-
+turbines_recipe <- recipe(turbine_capacity ~ ., data = turbines_recoded)
 
 ```
 
@@ -360,7 +360,7 @@ metrics_list <- metric_set(roc_auc)
 Modify the code above to also include ``accuracy``, ``precision``, and ``recall``:
 
 ```{r create_metrics1, exercise=TRUE}
-
+metrics_list <- metric_set(accuracy, precision, recall, roc_auc)
 
 ```
 
@@ -397,7 +397,9 @@ Now, your turn. Modify the code above to create a decision tree using the follow
 
 
 ```{r create_model1, exercise=TRUE}
-
+dt_model <- decision_tree() %>% 
+  set_engine("rpart") %>% 
+  set_mode("classification")
 
 ```
 
@@ -425,7 +427,9 @@ Now, modify your own ``dt_model`` to tell R to tune 2 hyperparameters:
 * ``min_n``: The minimum number of observation in each branch needed for a split.
 
 ```{r create_model2, exercise=TRUE}
-
+dt_model <- decision_tree(tree_depth = tune(), min_n = tune()) %>% 
+  set_engine("rpart") %>% 
+  set_mode("classification")
 
 ```
 
@@ -458,7 +462,9 @@ Now your turn to create a workflow for your decision tree model, by doing the fo
 * Replace ``chocolate_recipe`` by ``turbines_recipe``.
 
 ```{r create_wf1, exercise=TRUE}
-
+dt_wf <- workflow() %>% 
+  add_model(dt_model) %>% 
+  add_recipe(turbines_recipe)
 
 ```
 
@@ -493,7 +499,8 @@ Now, apply this to our training set, making these modifications:
 * We want to stratify by the ``turbine_capacity``.
 
 ```{r split_data3, exercise=TRUE}
-
+turbines_folds <- vfold_cv(train, v = 3,
+                            strata = "turbine_capacity")
 
 ```
 
@@ -507,7 +514,7 @@ turbines_folds <- vfold_cv(train, v = 3,
 Print out ``turbines_folds`` to make sure this worked:
 
 ```{r split_data4, exercise=TRUE}
-
+turbines_folds
 
 ```
 
@@ -538,7 +545,7 @@ elasticnet_grid <- grid_random(parameters(penalty(), mixture()), size = 20)
 Now, apply ``grid_random()`` to your model, by using ``tree_depth()`` and ``min_n()`` instead of ``penalty()`` and ``mixture()``. Save the grid as ``dt_grid`` instead of ``elasticnet_grid``:
 
 ```{r tuning1, exercise=TRUE}
-
+dt_grid <- grid_random(parameters(tree_depth(), min_n()), size = 20)
 
 ```
 
@@ -551,7 +558,7 @@ dt_grid <- grid_random(parameters(tree_depth(), min_n()), size = 20)
 Now use ``head()``on ``dt_print`` to have a look at your tuning grid:
 
 ```{r tuning2, exercise=TRUE}
-
+head(dt_grid)
 
 ```
 
@@ -581,7 +588,10 @@ Now, run your own hyperparameter tuning by modifying the code above as follows:
 * Replace ``lasso_grid`` by ``dt_grid``.
 
 ```{r tuning3, exercise=TRUE}
-
+dt_cv_results <- dt_wf %>% 
+  tune_grid(resamples = turbines_folds,
+            grid = dt_grid,
+            metrics = metrics_list)
 
 ```
 
@@ -609,7 +619,8 @@ dt_cv_results %>%
 Now, use the ``plot_tuning_metrics()`` function to plot the performance of the model for different values of ``min_n``:
 
 ```{r plot_perf1, exercise=TRUE}
-
+dt_cv_results %>% 
+  plot_tuning_metrics(hyperparameter = "min_n", multiple = TRUE) 
 
 ```
 
@@ -633,7 +644,8 @@ dt_cv_results %>%
 Next, select the best model using the ``select_best()`` function, with ``metric = "roc_auc"`` as an additional argument. Save the results as ``best_dt_model``:
 
 ```{r plot_perf2, exercise=TRUE}
-
+best_dt_model <- dt_cv_results %>% 
+  select_best(metric = "roc_auc")
 
 ```
 
@@ -666,7 +678,9 @@ Now, apply this code to our new problem by doing the following:
 * Replace ``chocolate_split`` by ``turbines_split``.
 
 ```{r apply_best1, exercise=TRUE}
-
+dt_final_fit <- dt_wf %>% 
+  finalize_workflow(best_dt_model) %>% 
+  last_fit(split = turbines_split)
 
 ```
 
@@ -681,7 +695,8 @@ dt_final_fit <- dt_wf %>%
 Next, collect the predictions from ``dt_final_fit`` by applying the ``collect_predictions`` function. Save the results as ``dt_predictions``:
 
 ```{r apply_best2, exercise=TRUE}
-
+dt_predictions <- dt_final_fit %>% 
+  collect_predictions()
 
 ```
 
@@ -695,7 +710,8 @@ dt_predictions <- dt_final_fit %>%
 Next, look at your ``dt_predictions`` object using ``head()``:
 
 ```{r apply_best3, exercise=TRUE}
-
+dt_predictions %>% 
+  head()
 
 ```
 
@@ -723,7 +739,9 @@ conf_mat(lasso_predictions,
 Now build a confusion matrix for your model:
 
 ```{r apply_best4, exercise=TRUE}
-
+conf_mat(dt_predictions,
+         truth = turbine_capacity,
+         estimate = .pred_class)
 
 ```
 
@@ -748,7 +766,10 @@ question("Which of the following statements is correct?",
 Amend the confusion matrix to make it a heatmap, by adding `` %>% autoplot(type = "heatmap")``:
 
 ```{r apply_best5, exercise=TRUE}
-
+conf_mat(dt_predictions,
+         truth = turbine_capacity,
+         estimate = .pred_class) %>% 
+  autoplot(type = "heatmap")
 
 ```
 
