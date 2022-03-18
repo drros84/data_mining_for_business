@@ -144,8 +144,12 @@ confusionMatrix(test_data$expensive,
 # has a low credit rating or not. Build a confusion matrix to show the results.
 # Push the results to github and create a pull request
 credit_dataset <- Credit %>% 
+<<<<<<< HEAD
+  mutate(low_credit_rating = ifelse(Rating < 247, "low_rating", "other")) 
+=======
   mutate(low_credit_rating = ifelse(Rating < 247, "low_rating", "other")) %>% 
   mutate(low_credit_rating = as.factor(low_credit_rating))
+>>>>>>> a1652c685e56c6932184f9a250f529b60b281493
 
 train_index <- sample(c(1:nrow(credit_dataset)), 
                       0.8 * nrow(credit_dataset))
