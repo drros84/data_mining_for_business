@@ -40,6 +40,67 @@ attendance_joined[na_sample, "strength_of_schedule"] <- NA
 ## Start here: build a random forest model to predict whether a game will have high attendance or not. 
 # Note: there are missing values in the strenght_of_schedule variable. Initially, remove them using the code below
 
-attendance_clean <- attendance_joined %>% 
-  na.omit()
+attendance_clean <- attendance_joined  
+  # na.omit()
 
+attendance_joined %>% 
+  select(year, week, margin_of_victory, strength_of_schedule, tech_factor1, tech_factor2) %>% 
+  cor() %>% 
+  corrplot()
+
+attendance_split <- initial_split(attendance_clean,
+                                  prop = 0.75,
+                                  strata = weekly_attendance)
+
+train <- training(attendance_split)
+test <- testing(attendance_split)
+
+attendance_recipe <- recipe(weekly_attendance ~ ., data = attendance_clean) %>% 
+  step_impute_median(strength_of_schedule) %>% 
+  step_corr(all_numeric(), threshold = 0.9)
+
+metrics_list <- metric_set(accuracy, precision, recall, roc_auc)
+
+attendance_folds <- vfold_cv(train, v = 3,
+                             strata = weekly_attendance)
+
+
+rf_model <- rand_forest(mtry = tune(), trees = tune(), min_n = tune()) %>% 
+  set_engine("ranger", importance = "permutation") %>% 
+  set_mode("classification")
+
+
+rf_wf <- workflow() %>% 
+  add_model(rf_model) %>% 
+  add_recipe(attendance_recipe)
+
+rf_grid <- grid_random(
+  parameters(mtry() %>% range_set(c(4, 12)), trees(), min_n()), 
+  size = 5)
+
+rf_cv_results <- rf_wf %>% 
+  tune_grid(resamples = attendance_folds,
+            grid = rf_grid,
+            metrics = metrics_list)
+
+best_rf_model <- rf_cv_results %>% 
+  select_best(metric = "roc_auc")
+
+rf_final_fit <- rf_wf %>% 
+  finalize_workflow(best_rf_model) %>% 
+  last_fit(split = attendance_split)
+
+rf_predictions <- rf_final_fit %>% 
+  collect_predictions()
+
+rf_final_perf <- metrics_list(rf_predictions,
+                              truth = weekly_attendance,
+                              estimate = .pred_class,
+                              .pred_high)
+
+base_perf 
+impute_perf <- rf_final_perf
+
+rf_final_fit %>% 
+  extract_fit_parsnip() %>% 
+  vip(geom = "point")
