@@ -1,5 +1,3 @@
-
-
 library(tidyverse)
 library(glmnet)
 library(tidymodels)
@@ -9,7 +7,6 @@ library(roxygen2)
 source("lesson_2022_02_18/chocolate_functions.R")
 
 # Set seed
-
 set.seed(1234)
 
 # Import data
@@ -35,12 +32,13 @@ chocolate_clean <- chocolate %>%
 # Please write which model is the best and why.
 ###############################################################################
 
+#random forest model
 head(chocolate_clean)
 summary(chocolate_clean)
 
-chocolate_split <- initial_split(chocolate_clean,
-                                 prop = 0.75,
-                                 strata = high_rating)
+chocolate_split<- initial_split(chocolate_clean,
+                                prop = 0.75,
+                                strata = high_rating)
 
 train <- training(chocolate_split)
 test <- testing(chocolate_split)
@@ -48,7 +46,8 @@ test <- testing(chocolate_split)
 chocolate_recipe <- recipe(high_rating ~ ., data = chocolate_clean) 
 
 chocolate_recipe
-metrics_list <- metric_set(roc_auc)
+
+metrics_list <- metric_set(accuracy, precision, recall, roc_auc)
 
 rf_model <- rand_forest(mtry = tune(), trees = tune(), min_n = tune()) %>% 
   set_engine("ranger") %>% 
@@ -59,7 +58,8 @@ rf_wf <- workflow() %>%
   add_recipe(chocolate_recipe)
 
 chocolate_folds <- vfold_cv(train, v = 3,
-                             strata = "high_rating")
+                            strata = "high_rating")
+
 rf_grid <- grid_random(
   parameters(mtry() %>% range_set(c(4, 12)), trees(), min_n()), 
   size = 20)
@@ -68,6 +68,7 @@ rf_cv_results <- rf_wf %>%
   tune_grid(resamples = chocolate_folds,
             grid = rf_grid,
             metrics = metrics_list)
+
 rf_cv_results %>% 
   plot_tuning_metrics(hyperparameter = "mtry", multiple = TRUE) 
 
@@ -87,51 +88,102 @@ rf_final_fit <- rf_wf %>%
 rf_predictions <- rf_final_fit %>% 
   collect_predictions()
 
+conf_mat(rf_predictions,
+         truth = high_rating,
+         estimate = .pred_class) %>% 
+  autoplot(type = "heatmap")
 
+rf_predictions %>% 
+  roc_curve(truth = high_rating, .pred_high) %>% 
+  autoplot()
 
+rf_final_perf <- metrics_list(rf_predictions,
+                              truth = high_rating,
+                              estimate = .pred_class,
+                              .pred_high)
 
+rf_final_perf
 
+# decision tree model
 
-rff_model <- logistic_reg() %>% 
-  set_engine("glmnet") %>% 
+chocolate_split <- initial_split(chocolate_clean,
+                                 prop = 0.75,
+                                 strata = high_rating)
+
+train <- training(chocolate_split)
+test <- testing(chocolate_split)
+
+chocolate_recipe <- recipe(high_rating ~ ., data = chocolate_clean)
+
+chocolate_recipe
+
+metrics_list <- metric_set(accuracy, precision, recall, roc_auc)
+
+dt_model <- decision_tree() %>% 
+  set_engine("rpart") %>% 
   set_mode("classification")
 
-lasso_model <- logistic_reg(penalty = tune(), mixture = tune()) %>% 
-  set_engine("glmnet") %>% 
+dt_model <- decision_tree(tree_depth = tune(), min_n = tune()) %>% 
+  set_engine("rpart") %>% 
   set_mode("classification")
 
-lasso_wf <- workflow() %>% 
-  add_model(lasso_model) %>% 
+dt_wf <- workflow() %>% 
+  add_model(dt_model) %>% 
   add_recipe(chocolate_recipe)
 
 chocolate_folds <- vfold_cv(train, v = 3,
                             strata = high_rating)
-lasso_grid <- grid_random(parameters(penalty(), mixture()), size = 20)
 
-lasso_cv_results <- lasso_wf %>% 
+chocolate_folds
+
+dt_grid <- grid_random(parameters(tree_depth(), min_n()), size = 20)
+
+head(dt_grid)
+
+dt_cv_results <- dt_wf %>% 
   tune_grid(resamples = chocolate_folds,
-            grid = lasso_grid,
+            grid = dt_grid,
             metrics = metrics_list)
 
+dt_cv_results %>% 
+  plot_tuning_metrics(hyperparameter = "min_n", multiple = TRUE) 
 
+best_dt_model <- dt_cv_results %>% 
+  select_best(metric = "roc_auc")
 
-late_model <- decision_tree() %>% 
-  set_engine("rpart") %>% 
-  set_mode("classification")
+best_dt_model
 
-late_model <- decision_tree (tree_depth(), min_n() ) %>% 
-  set_engine("rpart") %>% 
-  set_mode("classification")
+dt_final_fit <- dt_wf %>% 
+  finalize_workflow(best_dt_model) %>% 
+  last_fit(split = chocolate_split)
 
-late_wf <- workflow() %>% 
-  add_model(late_model) %>% 
-  add_recipe(chocolate_recipe)
+dt_predictions <- dt_final_fit %>% 
+  collect_predictions()
 
-chocolate_folds2 <- vfold_cv (train, v = 5,
-                            strata = high_rating)
-late_grid <- grid_random(parameters(tree_depth(), min_n() ), size = 20)
+dt_predictions %>% 
+  head()
 
-late_cv_results <- late_wf %>% 
-  tune_grid(resamples = chocolate_folds2,
-            grid = late_grid,
-            metrics = metrics_list)
+conf_mat(dt_predictions,
+         truth = high_rating,
+         estimate = .pred_class)
+
+conf_mat(dt_predictions,
+         truth = high_rating,
+         estimate = .pred_class) %>% 
+  autoplot(type = "heatmap")
+
+conf_mat(dt_predictions,
+         truth = high_rating,
+         estimate = .pred_class) %>% 
+  autoplot(type = "mosaic")
+
+dt_predictions %>% 
+  roc_curve(truth = high_rating, .pred_high) %>% 
+  autoplot()
+
+dt_final_perf <- metrics_list(dt_predictions,
+                              truth = high_rating,
+                              estimate = .pred_class,
+                              .pred_high)
+
+dt_final_perf
