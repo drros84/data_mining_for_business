@@ -13,7 +13,7 @@ set.seed(1234)
 
 # Import data
 chocolate <- read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2022/2022-01-18/chocolate.csv')
-
+chocolate
 # Clean the data
 chocolate_clean <- chocolate %>% 
   mutate(obs_n = row_number()) %>% 
@@ -26,6 +26,8 @@ chocolate_clean <- chocolate %>%
   clean_bean_origins() %>% 
   clean_review_dates() %>% 
   select(-ref, -specific_bean_origin_or_bar_name, -cocoa_percent, -rating, -obs_n)
+
+chocolate_clean
 
 ###############################################################################
 # Start analysis for your homework here.
