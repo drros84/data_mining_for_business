@@ -45,43 +45,63 @@ dev.off()
 
 # First, split the data between a training and test set:
 
+turbines_split <- initial_split(turbines_recoded,
+                                prop = 0.50,
+                                strata = "turbine_capacity")
+
+train <- training(turbines_split)
+test <- testing(turbines_split)
+
 
 # Create the 'recipe' by using ``turbine_capacity`` as the predictor and all other variables as the features:
 
-
+turbines_recipe <- recipe(turbine_capacity ~ ., data = turbines_recoded) 
+turbines_recipe
 
 # Create an object to store performance metrics. Use ``roc_auc`` and anything else you think would be useful:
 
-
+metrics_list <- metric_set(roc_auc, accuracy, precision, recall)
 
 # Tell R to create a neural network model:
 #   
 # * Call the model ``nn_model``;
 # * Use the ``tabnet()`` function to tell R this is a neural network model;
-# * Tune the following hyperparameter: `learn_rate``;
-# * Use the ``torch`` package;
+  # * Tune the following hyperparameter: `learn_rate``;
+  # * Use the ``torch`` package;
 
+nn_model <- tabnet(learn_rate = tune()) %>% 
+  set_engine("torch") %>% 
+  set_mode("classification")
 
 
 # Create a workflow:
 
+nn_wf <- workflow() %>% 
+  add_model(nn_model) %>% 
+  add_recipe(turbines_recipe)
 
 
 # Create your cross-validation folds. Use 3-fold cross-validation.
 
-
+turbines_folds <- vfold_cv(train, v = 3,
+                           strata = turbine_capacity)
 
 # Create a regular grid of with 5 levels to tune your hyperparameters:
 
+nn_grid <- grid_regular(parameters(learn_rate()), levels = 5)
 
 
 # Tune your hyperparameters:
 
-
+nn_cv_results <- nn_wf %>% 
+  tune_grid(resamples = turbines_folds,
+            grid = nn_grid,
+            metrics = metrics_list)
 
 # Plot the performance for different values of ``learn_rate`` using the ``plot_tuning_metrics()`` function:
 
-
+nn_cv_results %>% 
+  plot_tuning_metrics(hyperparameter = "learn_rate", multiple = FALSE) 
 
 
 # Show the best models using ``show_best()``, using AUC as the performance metric:
