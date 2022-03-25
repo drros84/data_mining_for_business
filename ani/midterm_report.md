@@ -49,5 +49,5 @@ Also if we compare the Roc Curve in Random Forest shows desirable results, since
 
 
 ## Results
-#### From our prediction analysis, it's abvious, that Random Forest model results are better, it's accuracy or error rate is ~92%.It shows better results for precision metric as well, exceeding decition tree result. 
+#### From our prediction analysis, it's abvious, that Random Forest model results are better, it's accuracy is ~92%. Accuracy percentage shows us the correct precidtions (True Positives+True Negatives) out of all instances (TP+TN+FN+FP). It shows sligtly better results for precision metric as well, exceeding decition tree result. 
 
