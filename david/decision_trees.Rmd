@@ -1,0 +1,867 @@
+---
+title: "Decision trees and random forests"
+output: learnr::tutorial
+runtime: shiny_prerendered
+---
+
+```{r setup, include=FALSE}
+library(learnr)
+library(tidyverse)
+library(tidymodels)
+library(rpart)
+library(ranger)
+knitr::opts_chunk$set(echo = FALSE)
+
+set.seed(1234)
+
+plot_tuning_metrics <- function(tuning_results, hyperparameter, multiple = FALSE){
+  
+  if(multiple == FALSE) {
+    
+    tuning_results %>%
+      collect_metrics() %>%
+      ggplot(aes(x = eval(parse(text = hyperparameter)), y = mean, color = .metric)) +
+      geom_errorbar(aes(
+        ymin = mean - std_err,
+        ymax = mean + std_err
+      ),
+      alpha = 0.5
+      ) +
+      geom_line(size = 1.5) +
+      facet_wrap(~.metric, scales = "free", nrow = 2) +
+      theme_bw() +
+      theme(legend.position = "none") +
+      xlab(hyperparameter)
+    
+  } else {
+    
+    tuning_results %>% 
+      collect_metrics() %>%
+      ggplot(aes(x = eval(parse(text = hyperparameter)), y = mean)) +
+      geom_point() +
+      facet_wrap(~.metric, scales = "free", nrow = 2) +
+      theme_bw()  +
+      xlab(hyperparameter)
+    
+  }
+  
+}
+
+turbines <- read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-10-27/wind-turbine.csv")
+
+turbines_df <- turbines %>%
+  transmute(
+    turbine_capacity = turbine_rated_capacity_k_w,
+    rotor_diameter_m,
+    hub_height_m,
+    commissioning_date = parse_number(commissioning_date),
+    province_territory = fct_lump_n(province_territory, 10),
+    model = fct_lump_n(model, 10)
+  ) %>%
+  filter(!is.na(turbine_capacity)) %>%
+  mutate_if(is.character, factor)
+
+turbines_recoded <- turbines_df %>% 
+  mutate(turbine_capacity = ifelse(turbine_capacity > 2300, "high", "other")) %>% 
+  mutate(turbine_capacity = as.factor(turbine_capacity)) 
+
+turbines_split <- initial_split(turbines_recoded,
+                                 prop = 0.75,
+                                 strata = "turbine_capacity")
+
+train <- training(turbines_split)
+test <- testing(turbines_split)
+
+turbines_recipe <- recipe(turbine_capacity ~ ., data = turbines_recoded) 
+
+metrics_list <- metric_set(accuracy, precision, recall, roc_auc)
+
+dt_model <- decision_tree(tree_depth = tune(), min_n = tune()) %>% 
+  set_engine("rpart") %>% 
+  set_mode("classification")
+
+dt_wf <- workflow() %>% 
+  add_model(dt_model) %>% 
+  add_recipe(turbines_recipe)
+
+turbines_folds <- vfold_cv(train, v = 3,
+                            strata = "turbine_capacity")
+
+dt_grid <- grid_random(parameters(tree_depth(), min_n()), size = 5)
+
+dt_cv_results <- dt_wf %>% 
+  tune_grid(resamples = turbines_folds,
+            grid = dt_grid,
+            metrics = metrics_list)
+
+best_dt_model <- dt_cv_results %>% 
+  select_best(metric = "roc_auc")
+
+dt_final_fit <- dt_wf %>% 
+  finalize_workflow(best_dt_model) %>% 
+  last_fit(split = turbines_split)
+
+dt_predictions <- dt_final_fit %>% 
+  collect_predictions()
+
+dt_final_perf <- metrics_list(dt_predictions,
+                                truth = turbine_capacity,
+                                estimate = .pred_class,
+                                .pred_high)
+
+```
+
+## Introduction
+
+Today we are going to try using decision trees and random forests. We are also going to use a new dataset of wind turbines in Canada which we have imported called ``turbines_df``.
+
+## Modelling process recap
+
+Here is a brief reminder of the step you need to follow for your machine learning process:
+
+1. Explore the data (and modify it if needed);
+2. Split the data between a training and test set;
+4. Define the model (including any hyperparameters to tune);
+5. Tune your hyperparameters to select the best model using cross-validation;
+6. Select the model;
+7. Apply the best model to the test set;
+8. Evaluate performance of the best model on the test set.
+
+## Exploratory data analysis
+
+You can find more information about the variables [here] (https://github.com/rfordatascience/tidytuesday/blob/master/data/2020/2020-10-27/readme.md).
+
+We will first examine the dataset.
+
+Explore the first 6 lines of the data using the ``head()`` function on ``turbines_df``:
+
+```{r intro_1, exercise=TRUE}
+
+```
+
+```{r intro_1-solution}
+
+head(turbines_df)
+
+```
+
+Look a the number of observations in the dataset using ``dim()``:
+
+```{r intro_2, exercise=TRUE}
+
+```
+
+```{r intro_2-solution}
+
+dim(turbines_df)
+
+```
+
+
+```{r intro-question1, echo=FALSE}
+question("How many rows and columns are there in the dataframe?",
+  answer("538 rows, 9 columns"),
+  answer("6 columns, 6478 rows"),
+  answer("9 columns, 538 rows"),
+  answer("6478 rows, 6 columns", correct = TRUE)
+)
+```
+
+Look at the structure of the data using the ``str()`` function:
+
+```{r intro_3, exercise=TRUE}
+
+```
+
+```{r intro_3-solution}
+
+str(turbines_df)
+
+```
+
+```{r intro-question2, echo=FALSE}
+question("What type of data is turbine_capacity?",
+  answer("numeric", correct = TRUE),
+  answer("character"),
+  answer("factor"),
+  answer("boolean")
+)
+```
+
+
+Now get some summary statistics using the ``summary()``function:
+
+```{r intro_4, exercise=TRUE}
+
+```
+
+```{r intro_4-solution}
+
+summary(turbines_df)
+
+```
+
+```{r intro-question3, echo=FALSE}
+question("What is the mean turbine capacity?",
+  answer("1,600 kw"),
+  answer("65 kw"),
+  answer("1967 kw", correct = TRUE),
+  answer("3750 kw")
+)
+```
+
+We will use this data to forecast whether a turbine has high capacity or not. We will define 'high-capacity' as a turbine with capacity of more than 2,300 kilowatts (which as you can see is the 3rd quartile of the ``turbine_capacity`` variable. This is how we recode the data:
+
+```{r intro-example1, echo = TRUE}
+
+turbines_recoded <- turbines_df %>% 
+  mutate(turbine_capacity = ifelse(turbine_capacity > 2300, "high", "other")) %>% 
+  mutate(turbine_capacity = as.factor(turbine_capacity)) 
+
+```
+
+Look at the structure of ``turbines_recoded`` using ``str()``:
+
+```{r intro_5, exercise=TRUE}
+
+
+```
+
+```{r intro_5-solution}
+
+str(turbines_recoded)
+
+```
+
+```{r intro-question4, echo=FALSE}
+question("What type of data is turbine_capacity?",
+  answer("numeric"),
+  answer("character"),
+  answer("factor", correct = TRUE),
+  answer("boolean")
+)
+```
+
+
+## Train and test set
+
+The first step for our modelling is to split the data between a training and test set using the ``initial_split()`` function.
+
+Remember that this is how we split the ``chocolate`` dataset, with 80% of the data in the training set, and stratified by the outcome variable ``high_rating``:
+
+```{r split_data-example1, echo = TRUE, eval = FALSE}
+
+chocolate_split <- initial_split(chocolate_clean,
+                                 prop = 0.8,
+                                 strata = high_rating)
+
+train <- training(chocolate_split)
+test <- testing(chocolate_split)
+
+```
+
+Now your turn. Split the ``turbines_recoded`` dataframe in the same by modifying the code above. Also make the following changes:
+
+* Save the result of ``initial_split()`` in a variable called ``turbines_split``;
+* Allocate 75% of the data to training;
+* Stratify by the outcome variable ``turbine_capacity``.
+
+```{r split_data1, exercise=TRUE}
+
+
+```
+
+```{r split_data1-solution}
+
+turbines_split <- initial_split(turbines_recoded,
+                                 prop = 0.75,
+                                 strata = turbine_capacity)
+
+train <- training(turbines_split)
+test <- testing(turbines_split)
+
+```
+
+Next, examine the dimensions of our ``train`` and ``test`` objects:
+
+```{r split_data2, exercise=TRUE}
+
+
+```
+
+```{r split_data2-solution}
+
+dim(train)
+dim(test)
+
+```
+
+
+```{r split_data-question1, echo=FALSE}
+question("How many rows does the training set have?",
+  answer("965"),
+  answer("4858", correct = TRUE),
+  answer("1620"),
+  answer("6")
+)
+```
+
+
+## Create the model
+
+### Write the recipe
+
+Remember that with ``chocolate``, we told R what variable we were predicting and what features to use with the ``recipe()`` function. The code below tells R we want to predict ``high_rating`` using all other columns of the ``chocolate_clean`` dataframe as features:
+
+```{r create_recipe-example1, echo = TRUE, eval = FALSE}
+
+chocolate_recipe <- recipe(high_rating ~ ., data = chocolate_clean) 
+
+```
+
+Modify the code above to create a "recipe" for predicting ``turbine_capacity`` using all other columns of the ``turbines_recoded`` dataframe as features. Save the result as ``turbines_recipe``.
+
+```{r create_recipe1, exercise=TRUE}
+
+
+```
+
+```{r create_recipe1-solution}
+
+turbines_recipe <- recipe(turbine_capacity ~ ., data = turbines_recoded) 
+
+```
+
+Print ``turbines_recipe`` to examine your model:
+
+```{r create_recipe2, exercise=TRUE}
+
+
+```
+
+```{r create_recipe2-solution}
+
+turbines_recipe 
+
+```
+
+### Choose performance metrics
+
+We also want to define what metrics to use to assess our model performance. The code below creates an object that will use only the AUC:
+
+```{r create_metrics-example1, echo = TRUE, eval = FALSE}
+
+metrics_list <- metric_set(roc_auc)
+
+```
+
+Modify the code above to also include ``accuracy``, ``precision``, and ``recall``:
+
+```{r create_metrics1, exercise=TRUE}
+
+
+```
+
+```{r create_metrics1-solution}
+
+metrics_list <- metric_set(accuracy, precision, recall, roc_auc)
+
+```
+
+### Build a model
+
+Remember that with our ``chocolate`` dataset, we were able to create a logistic regression with the following code:
+
+```{r create_model-example1, echo = TRUE}
+
+lasso_model <- logistic_reg() %>% 
+  set_engine("glmnet") %>% 
+  set_mode("classification")
+
+```
+
+The code above does the following:
+
+* We use the ``logistic_reg()`` function to tell R that it is a logistic regression;
+* We use ``set_engine("glmnet")`` to tell R to use the specific ``glmnet`` package;
+* We use ``set_mode("classification")`` to tell R that this is a classification problem (rather than a "regression" problem).
+
+Now, your turn. Modify the code above to create a decision tree using the following steps:
+
+* Call your new model ``dt_model`` instead of ``lasso_model``;
+* Use the ``decision_tree()`` function to tell R that this is a decision tree model;
+* Use the ``"rpart"`` instead of ``"glmnet"`` to tell R to use the ``rpart`` package;
+* Keep the last line the same as it is also a classification problem.
+
+
+```{r create_model1, exercise=TRUE}
+
+
+```
+
+```{r create_model1-solution}
+
+dt_model <- decision_tree() %>% 
+  set_engine("rpart") %>% 
+  set_mode("classification")
+
+```
+
+We also want to improve our model by tuning some hyperparameters. Remember that with a logistic regression, we could tell R to tune the hyperparameters ``penaly`` and ``mixture`` using:
+
+```{r create_model-example2, echo = TRUE}
+
+lasso_model <- logistic_reg(penalty = tune(), mixture = tune()) %>% 
+  set_engine("glmnet") %>% 
+  set_mode("classification")
+
+```
+
+Now, modify your own ``dt_model`` to tell R to tune 2 hyperparameters:
+
+* ``tree_depth``: The maximum depth of the tree;
+* ``min_n``: The minimum number of observation in each branch needed for a split.
+
+```{r create_model2, exercise=TRUE}
+
+
+```
+
+```{r create_model2-solution}
+
+dt_model <- decision_tree(tree_depth = tune(), min_n = tune()) %>% 
+  set_engine("rpart") %>% 
+  set_mode("classification")
+
+```
+
+### Create a workflow
+
+Finally, now we have a recipe and a model, we can bring them together in a workflow. 
+
+With the ``chocolate`` dataset, our workflow for a lasso model looked like this:
+
+```{r create_wf-example1, echo = TRUE, eval = FALSE}
+
+lasso_wf <- workflow() %>% 
+  add_model(lasso_model) %>% 
+  add_recipe(chocolate_recipe)
+
+```
+
+Now your turn to create a workflow for your decision tree model, by doing the following:
+
+* Save the workflow as ``dt_wf`` instead of ``lasso_wf``;
+* Replace ``lasso_model`` by ``dt_model``;
+* Replace ``chocolate_recipe`` by ``turbines_recipe``.
+
+```{r create_wf1, exercise=TRUE}
+
+
+```
+
+```{r create_wf1-solution}
+
+dt_wf <- workflow() %>% 
+  add_model(dt_model) %>% 
+  add_recipe(turbines_recipe)
+
+```
+
+
+## Hyperparameter tuning
+
+### Create cross-validation sets
+
+Next, we also want to split our training set into several groups in order to perform cross-validation. 
+
+Remember that for the ``chocolate`` dataset, we used this code:
+
+```{r split_data-example2, echo = TRUE, eval = FALSE}
+
+chocolate_folds <- vfold_cv(train, v = 5,
+                            strata = high_rating)
+
+```
+
+Now, apply this to our training set, making these modifications:
+
+* Save the results in ``turbines_folds`` instead of ``chocolate_folds``;
+* We want to run 3-fold instead of (5-fold cross-validation);
+* We want to stratify by the ``turbine_capacity``.
+
+```{r split_data3, exercise=TRUE}
+
+
+```
+
+```{r split_data3-solution}
+
+turbines_folds <- vfold_cv(train, v = 3,
+                            strata = "turbine_capacity")
+
+```
+
+Print out ``turbines_folds`` to make sure this worked:
+
+```{r split_data4, exercise=TRUE}
+
+
+```
+
+```{r split_data4-solution}
+
+turbines_folds
+
+```
+
+### Tune hyperparameters
+
+We next need to create a grid of values for hyperparameters so that we can run our model over lots of combinations of them, in order to find the best. For example, in the case of our chocolate model, we could tune over ``penalty``and ``mixture`` with this code:
+
+```{r tuning-example1, echo = TRUE, eval = FALSE}
+
+elasticnet_grid <- grid_regular(parameters(penalty(), mixture()), levels = 50)
+
+```
+
+The problem with the code above is that by using ``grid_regular()`` it will create 50 x 50 = 250 combinations of hyperparameters to check, which is very time consuming. Instead, we can use ``grid_random()`` randomly select 20 combinations to run our model on using this code:
+
+```{r tuning-example2, echo = TRUE, eval = FALSE}
+
+elasticnet_grid <- grid_random(parameters(penalty(), mixture()), size = 20)
+
+```
+
+Now, apply ``grid_random()`` to your model, by using ``tree_depth()`` and ``min_n()`` instead of ``penalty()`` and ``mixture()``. Save the grid as ``dt_grid`` instead of ``elasticnet_grid``:
+
+```{r tuning1, exercise=TRUE}
+
+
+```
+
+```{r tuning1-solution}
+
+dt_grid <- grid_random(parameters(tree_depth(), min_n()), size = 20)
+
+```
+
+Now use ``head()``on ``dt_print`` to have a look at your tuning grid:
+
+```{r tuning2, exercise=TRUE}
+
+
+```
+
+```{r tuning2-solution}
+
+head(dt_grid)
+
+```
+
+
+Next, we proceed to tuning the model. Remember with the ``chocolate`` dataset, this code did our hyperparameter tuning for us:
+
+```{r tuning-example3, echo = TRUE, eval = FALSE}
+
+lasso_cv_results <- lasso_wf %>% 
+  tune_grid(resamples = chocolate_folds,
+            grid = lasso_grid,
+            metrics = metrics_list)
+
+```
+
+
+Now, run your own hyperparameter tuning by modifying the code above as follows:
+
+* Save the results as ``dt_cv_results``;
+* Replace ``chocolate_folds`` by ``turbines_folds``;
+* Replace ``lasso_grid`` by ``dt_grid``.
+
+```{r tuning3, exercise=TRUE}
+
+
+```
+
+```{r tuning3-solution}
+
+dt_cv_results <- dt_wf %>% 
+  tune_grid(resamples = turbines_folds,
+            grid = dt_grid,
+            metrics = metrics_list)
+
+```
+
+
+## Choose best model
+
+We can plot the performance of our model for different values of the parameters using the ``plot_tuning_metrics()`` function (which is a function I created, not something from an R package). First, we look at performance for different values of ``tree_depth``:
+
+```{r plot_perf-example1, echo = TRUE}
+
+dt_cv_results %>% 
+  plot_tuning_metrics(hyperparameter = "tree_depth", multiple = TRUE) 
+
+```
+
+Now, use the ``plot_tuning_metrics()`` function to plot the performance of the model for different values of ``min_n``:
+
+```{r plot_perf1, exercise=TRUE}
+
+
+```
+
+```{r plot_perf1-solution}
+
+dt_cv_results %>% 
+  plot_tuning_metrics(hyperparameter = "min_n", multiple = TRUE) 
+
+```
+
+We can look at the best models by AUC by using the ``show_best()`` function on our ``dt_cv_results``, with the additional argument ``metric = "roc_auc"``:
+
+```{r plot_perf-example2, echo = TRUE}
+
+dt_cv_results %>% 
+  show_best(metric = "roc_auc")
+
+```
+
+
+Next, select the best model using the ``select_best()`` function, with ``metric = "roc_auc"`` as an additional argument. Save the results as ``best_dt_model``:
+
+```{r plot_perf2, exercise=TRUE}
+
+
+```
+
+```{r plot_perf2-solution}
+
+best_dt_model <- dt_cv_results %>% 
+  select_best(metric = "roc_auc")
+
+```
+
+## Apply best model to test set
+
+Finally, we can apply the best model to the test set, and look at its performance on an entirely new dataset.
+
+Remember that with the ``chocolate``, we ran the following code to finally train our best model on the **whole** training set, and then test it on the test set:
+
+```{r apply_best-example1, echo = TRUE, eval = FALSE}
+
+lasso_final_fit <- lasso_wf %>% 
+  finalize_workflow(best_lasso_model) %>% 
+  last_fit(split = chocolate_split)
+
+```
+
+Now, apply this code to our new problem by doing the following:
+
+* Save the model under ``dt_final_split``;
+* Replace ``lasso_wf`` by ``dt_wf``;
+* Replace ``best_lasso_model`` by ``best_dt_model``;
+* Replace ``chocolate_split`` by ``turbines_split``.
+
+```{r apply_best1, exercise=TRUE}
+
+
+```
+
+```{r apply_best1-solution}
+
+dt_final_fit <- dt_wf %>% 
+  finalize_workflow(best_dt_model) %>% 
+  last_fit(split = turbines_split)
+
+```
+
+Next, collect the predictions from ``dt_final_fit`` by applying the ``collect_predictions`` function. Save the results as ``dt_predictions``:
+
+```{r apply_best2, exercise=TRUE}
+
+
+```
+
+```{r apply_best2-solution}
+
+dt_predictions <- dt_final_fit %>% 
+  collect_predictions()
+
+```
+
+Next, look at your ``dt_predictions`` object using ``head()``:
+
+```{r apply_best3, exercise=TRUE}
+
+
+```
+
+```{r apply_best3-solution}
+
+dt_predictions %>% 
+  head()
+
+```
+
+In the ``chocolate`` dataset, we could build a confusion matrix with the code below, where:
+
+* ``lasso_predictions`` were the predictions from the lasso model on the test set;
+* ``high_rating`` is the true value for the predictor variable;
+* ``.pred_class`` is the column which has the prediction from your model (as a binary prediction)
+
+```{r apply_best-example2, echo = TRUE, eval = FALSE}
+
+conf_mat(lasso_predictions,
+         truth = high_rating,
+         estimate = .pred_class)
+
+```
+
+Now build a confusion matrix for your model:
+
+```{r apply_best4, exercise=TRUE}
+
+
+```
+
+```{r apply_best4-solution}
+
+conf_mat(dt_predictions,
+         truth = turbine_capacity,
+         estimate = .pred_class)
+
+```
+
+```{r apply_best-question1, echo=FALSE}
+question("Which of the following statements is correct?",
+  answer("Our model predicted that 275 turbines had high capacity, and only one of these predictions was wrong", correct = TRUE),
+  answer("Our model predicted that 275 turbines had high capacity, and only 19 of these predictions were wrong"),
+  answer("19 of the turbines we predicted were high-capacity were actually not"),
+  answer("1326 turbines are not high capacity")
+)
+```
+
+
+Amend the confusion matrix to make it a heatmap, by adding `` %>% autoplot(type = "heatmap")``:
+
+```{r apply_best5, exercise=TRUE}
+
+
+```
+
+```{r apply_best5-solution}
+
+conf_mat(dt_predictions,
+         truth = turbine_capacity,
+         estimate = .pred_class) %>% 
+  autoplot(type = "heatmap")
+
+```
+
+
+You can also amend it to make it into a mosaic plot by replacing ``"heatmap"`` by ``"mosaic"``:
+
+```{r apply_best6, exercise=TRUE}
+
+
+```
+
+```{r apply_best6-solution}
+
+conf_mat(dt_predictions,
+         truth = turbine_capacity,
+         estimate = .pred_class) %>% 
+  autoplot(type = "mosaic")
+
+```
+
+
+We can draw a ROC curve by using the code below. Note that the two arguments for ``roc_curve()`` are:
+
+* ``turbine_capacity``: the true value for the predictor;
+* ``.pred_high``: the predicted value for "high", in probability
+
+```{r apply_best-example3, echo = TRUE}
+
+dt_predictions %>% 
+  roc_curve(truth = turbine_capacity, .pred_high) %>% 
+  autoplot()
+
+```
+
+Finally, calculate the metrics of interest. Below is the example for a lasso model used on our ``chocolate``dataset. Note it has the following elements:
+
+* ``lasso_predictions``: the dataframe with the predictions;
+* ``high_rating``: the true value for the predictor variable;
+* ``.pred_class``: the predicted value for the predictor;
+* ``.pred_high``: the prediction, as a probability
+
+```{r apply_best-example4, echo = TRUE, eval = FALSE}
+
+lasso_final_perf <- metrics_list(lasso_predictions,
+                                truth = high_rating,
+                                estimate = .pred_class,
+                                .pred_high)
+
+```
+
+Amend the code above to replace the bits relevant to your current model. Save the results in ``dt_final_perf`` instead of ``lasso_final_perf``:
+
+```{r apply_best7, exercise=TRUE}
+
+
+```
+
+```{r apply_best7-solution}
+
+dt_final_perf <- metrics_list(dt_predictions,
+                                truth = turbine_capacity,
+                                estimate = .pred_class,
+                                .pred_high)
+
+```
+
+Print out the results ``dt_final_perf``:
+
+```{r apply_best8, exercise=TRUE}
+
+
+```
+
+```{r apply_best8-solution}
+
+dt_final_perf
+
+```
+
+
+```{r apply_best-question2, echo=FALSE}
+question("How would you interpret accuracy?",
+  answer("98.7% of the turbines we predicted were high capacity were correctly predicted"),
+  answer("98.7% of our predictions were correct", correct = TRUE),
+  answer("98.7% of the turbines we predicted were not high capacity were correctly predicted"),
+  answer("Our model detected correctly 98.7% of the turbines which were high-capacity in reality")
+)
+```
+
+```{r apply_best-question3, echo=FALSE}
+question("How would you interpret precision?",
+  answer("99.6% of the turbines we predicted were high capacity were correctly predicted", correct = TRUE),
+  answer("99.6% of our predictions were correct"),
+  answer("99.6% of the turbines we predicted were not high capacity were correctly predicted"),
+  answer("Our model detected correctly 99.6% of the turbines which were high-capacity in reality")
+)
+```
+
+```{r apply_best-question4, echo=FALSE}
+question("How would you interpret recall?",
+  answer("93.5% of the turbines we predicted were high capacity were correctly predicted"),
+  answer("93.5% of our predictions were correct"),
+  answer("93.5% of the turbines we predicted were not high capacity were correctly predicted"),
+  answer("Our model detected correctly 93.5% of the turbines which were high-capacity in reality", correct = TRUE)
+)
+```
+
+
+

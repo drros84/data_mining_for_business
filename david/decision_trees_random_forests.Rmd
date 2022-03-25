@@ -14,7 +14,38 @@ knitr::opts_chunk$set(echo = FALSE)
 
 set.seed(1234)
 
-source("plot_tuning_metrics.R")
+plot_tuning_metrics <- function(tuning_results, hyperparameter, multiple = FALSE){
+  
+  if(multiple == FALSE) {
+    
+    tuning_results %>%
+      collect_metrics() %>%
+      ggplot(aes(x = eval(parse(text = hyperparameter)), y = mean, color = .metric)) +
+      geom_errorbar(aes(
+        ymin = mean - std_err,
+        ymax = mean + std_err
+      ),
+      alpha = 0.5
+      ) +
+      geom_line(size = 1.5) +
+      facet_wrap(~.metric, scales = "free", nrow = 2) +
+      theme_bw() +
+      theme(legend.position = "none") +
+      xlab(hyperparameter)
+    
+  } else {
+    
+    tuning_results %>% 
+      collect_metrics() %>%
+      ggplot(aes(x = eval(parse(text = hyperparameter)), y = mean)) +
+      geom_point() +
+      facet_wrap(~.metric, scales = "free", nrow = 2) +
+      theme_bw()  +
+      xlab(hyperparameter)
+    
+  }
+  
+}
 
 turbines <- read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-10-27/wind-turbine.csv")
 
@@ -56,7 +87,7 @@ dt_wf <- workflow() %>%
 turbines_folds <- vfold_cv(train, v = 3,
                             strata = "turbine_capacity")
 
-dt_grid <- grid_random(parameters(tree_depth(), min_n()), size = 20)
+dt_grid <- grid_random(parameters(tree_depth(), min_n()), size = 5)
 
 dt_cv_results <- dt_wf %>% 
   tune_grid(resamples = turbines_folds,
@@ -89,7 +120,7 @@ rf_wf <- workflow() %>%
 
 rf_grid <- grid_random(
   parameters(mtry() %>% range_set(c(4, 12)), trees(), min_n()), 
-  size = 20)
+  size = 5)
 
 rf_cv_results <- rf_wf %>% 
   tune_grid(resamples = turbines_folds,

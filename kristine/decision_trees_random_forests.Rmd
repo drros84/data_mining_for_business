@@ -4,6 +4,7 @@ output: learnr::tutorial
 runtime: shiny_prerendered
 ---
 install.packages("learnr)
+librar
 ```{r setup, include=FALSE}
 library(learnr)
 library(tidyverse)
