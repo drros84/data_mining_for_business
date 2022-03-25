@@ -84,9 +84,13 @@ ikea_split <- initial_split(ikea_clean,
 train <- training(ikea_split)
 test <- testing(ikea_split)
 
+#We told R what variable we were predicting and what features to use with the ``recipe()`` function. The code below tells R we want to predict ``price`` using all other columns of the ``ikea_clean`` dataframe as features
+
+
 ikea_recipe <- recipe(price ~ ., data = ikea_clean) %>%
   step_impute_median(depth) 
   
+# I create an object to store performance metrics. Use ``accuracy``, ``precision``, ``recall``, ``roc_auc``
 
 metrics_list <- metric_set(accuracy, precision, recall, roc_auc)
 
@@ -135,6 +139,9 @@ rf_final_perf
 
 #decision tree model
 
+
+
+#The first step for our modelling is to split the data between a training and test set using the
 ikea_split <- initial_split(ikea_clean,
                                  prop = 0.75,
                                  strata = "price")
@@ -145,6 +152,8 @@ test <- testing(ikea_split)
 ikea_recipe <- recipe(price ~ ., data = ikea_clean)
 
 ikea_recipe
+
+# I create an object to store performance metrics. Use ``accuracy``, ``precision``, ``recall``, ``roc_auc``
 
 metrics_list <- metric_set(accuracy, precision, recall, roc_auc)
 
@@ -173,6 +182,8 @@ dt_cv_results <- dt_wf %>%
   tune_grid(resamples = ikea_folds,
             grid = dt_grid,
             metrics = metrics_list)
+
+#Plot the performance for different values of ``min_n()`` using the ``plot_tuning_metrics()`` function
 
 dt_cv_results %>% 
   plot_tuning_metrics(hyperparameter = "min_n", multiple = TRUE) 
@@ -225,7 +236,7 @@ dt_final_perf
 
 
 # If we compare this two models we shall see that RF model is more preferable than DT model for our prediction
-#because it`s accuracy, recall, roc_auc metrics are more correct when precision is the same.
+#because it`s accuracy, recall, roc_auc metrics are more correct and precision metrics is the same.
 
 
 
