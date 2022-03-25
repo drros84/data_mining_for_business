@@ -9,7 +9,7 @@ library(vip)
 
 set.seed(52)
 
-source("david/plot_tuning_metrics.R")
+source("maria/plot_tuning_metrics.R")
 
 
 attendance <- read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-02-04/attendance.csv")
@@ -40,48 +40,49 @@ attendance_joined[na_sample, "strength_of_schedule"] <- NA
 ## Start here: build a random forest model to predict whether a game will have high attendance or not. 
 # Note: there are missing values in the strenght_of_schedule variable. Initially, remove them using the code below
 
-attendance_clean <- attendance_joined  
-  # na.omit()
 
-attendance_joined %>% 
-  select(year, week, margin_of_victory, strength_of_schedule, tech_factor1, tech_factor2) %>% 
-  cor() %>% 
-  corrplot()
+attendance_clean <- attendance_joined %>% 
+  na.omit()
 
-attendance_split <- initial_split(attendance_clean,
-                                  prop = 0.75,
-                                  strata = weekly_attendance)
+attendance_split<- initial_split(attendance_clean,
+                                 prop = 0.75,
+                                 strata = weekly_attendance)
 
 train <- training(attendance_split)
 test <- testing(attendance_split)
 
-attendance_recipe <- recipe(weekly_attendance ~ ., data = attendance_clean) %>% 
-  step_impute_median(strength_of_schedule) %>% 
-  step_corr(all_numeric(), threshold = 0.9)
+attendance_recipe <- recipe(weekly_attendance ~ ., data = attendance_clean) 
 
 metrics_list <- metric_set(accuracy, precision, recall, roc_auc)
 
-attendance_folds <- vfold_cv(train, v = 3,
-                             strata = weekly_attendance)
-
-
 rf_model <- rand_forest(mtry = tune(), trees = tune(), min_n = tune()) %>% 
-  set_engine("ranger", importance = "permutation") %>% 
+  set_engine("ranger") %>% 
   set_mode("classification")
-
 
 rf_wf <- workflow() %>% 
   add_model(rf_model) %>% 
   add_recipe(attendance_recipe)
 
+attendance_folds <- vfold_cv(train, v = 3,
+                           strata = "weekly_attendance")
+
 rf_grid <- grid_random(
   parameters(mtry() %>% range_set(c(4, 12)), trees(), min_n()), 
-  size = 5)
+  size = 20)
 
 rf_cv_results <- rf_wf %>% 
   tune_grid(resamples = attendance_folds,
             grid = rf_grid,
             metrics = metrics_list)
+
+rf_cv_results %>% 
+  plot_tuning_metrics(hyperparameter = "mtry", multiple = TRUE) 
+
+rf_cv_results %>% 
+  plot_tuning_metrics(hyperparameter = "trees", multiple = TRUE) 
+
+rf_cv_results %>% 
+  plot_tuning_metrics(hyperparameter = "min_n", multiple = TRUE) 
 
 best_rf_model <- rf_cv_results %>% 
   select_best(metric = "roc_auc")
@@ -93,14 +94,22 @@ rf_final_fit <- rf_wf %>%
 rf_predictions <- rf_final_fit %>% 
   collect_predictions()
 
+conf_mat(rf_predictions,
+         truth = weekly_attendance,
+         estimate = .pred_class) %>% 
+  autoplot(type = "heatmap")
+
+rf_predictions %>% 
+  roc_curve(truth = weekly_attendance, .pred_high) %>% 
+  autoplot()
+
 rf_final_perf <- metrics_list(rf_predictions,
                               truth = weekly_attendance,
                               estimate = .pred_class,
                               .pred_high)
 
-base_perf 
-impute_perf <- rf_final_perf
+rf_final_perf
 
-rf_final_fit %>% 
-  extract_fit_parsnip() %>% 
-  vip(geom = "point")
+base_perf <- rf_final_perf
+
+base_perf
