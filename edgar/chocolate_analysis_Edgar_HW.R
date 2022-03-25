@@ -191,3 +191,13 @@ dt_final_perf <- metrics_list(dt_predictions,
 
 dt_final_perf
 
+
+#Coclusion
+#              DT        RF
+#accuracy    0.651    0.713
+#precision   0.594    0.832
+#recall      0.310    0.322
+#roc_auc     0.597    0.850
+
+#If we compare this two models we shall see that RF model is more preferable than DT model for our prediction
+#because it`s are more correct
