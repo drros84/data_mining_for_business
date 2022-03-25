@@ -41,6 +41,18 @@ ikea <- ikea %>%
   left_join(category_frame %>% mutate(item_id = as.character(item_id)), by = "item_id") %>% 
   select(-item_id)
 
+# You have access to the following variables to help you predict:
+# - sellable_online: whether the item can be sold online or not (True / False)
+# - other_colors: whether several colors are available for this item (Yes / No)
+# - some numeric data relating to the size of the item:
+#   - depth
+#   - height
+#   - height_width
+#   - double_height
+#   - triple_height
+# - some dummy variables that tell you the type of item sold (eg bed, chairs, bookcases & shelving units, etc)
+
+# Good luck!
 
 ################################################################################
 # Start here
@@ -58,6 +70,7 @@ ikea_clean <- ikea %>%
 # have a normal price ('other'). Your goal is to predict which furniture has a high price.
 
 #using random forest
+
 head(ikea_clean)
 summary(ikea_clean)
 
@@ -215,18 +228,7 @@ dt_final_perf
 
 
 
-# You have access to the following variables to help you predict:
-# - sellable_online: whether the item can be sold online or not (True / False)
-# - other_colors: whether several colors are available for this item (Yes / No)
-# - some numeric data relating to the size of the item:
-#   - depth
-#   - height
-#   - height_width
-#   - double_height
-#   - triple_height
-# - some dummy variables that tell you the type of item sold (eg bed, chairs, bookcases & shelving units, etc)
 
-# Good luck!
 
 
 
