@@ -43,10 +43,18 @@ attendance_joined[na_sample, "strength_of_schedule"] <- NA
 attendance_clean <- attendance_joined  
   # na.omit()
 
+view(attendance_clean)
+
 attendance_joined %>% 
   select(year, week, margin_of_victory, strength_of_schedule, tech_factor1, tech_factor2) %>% 
   cor() %>% 
   corrplot()
+
+## Train and test set
+
+The first step for our modelling is to split the data between a training and test set using the ``initial_split()`` function.
+
+Remember that this is how we split the ``chocolate`` dataset, with 80% of the data in the training set, and stratified by the outcome variable ``high_rating``:
 
 attendance_split <- initial_split(attendance_clean,
                                   prop = 0.75,
@@ -83,6 +91,7 @@ rf_cv_results <- rf_wf %>%
             grid = rf_grid,
             metrics = metrics_list)
 
+
 best_rf_model <- rf_cv_results %>% 
   select_best(metric = "roc_auc")
 
@@ -104,3 +113,6 @@ impute_perf <- rf_final_perf
 rf_final_fit %>% 
   extract_fit_parsnip() %>% 
   vip(geom = "point")
+
+
+
