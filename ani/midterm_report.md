@@ -31,7 +31,7 @@ Also if we compare the Roc Curve in Random Forest shows desirable results, since
 
 **Decision Tree**
 
-![](Dcurve.jpeg)
+![](dcurve.jpeg)
 
 **Decision tree**
 
