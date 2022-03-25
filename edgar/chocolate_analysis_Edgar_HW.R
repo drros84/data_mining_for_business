@@ -200,4 +200,4 @@ dt_final_perf
 #roc_auc     0.597    0.850
 
 #If we compare this two models we shall see that RF model is more preferable than DT model for our prediction
-#because it`s are more correct
+#because it`s metrics are more correct
