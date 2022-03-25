@@ -7,8 +7,9 @@ library(tidyverse)
 library(tidymodels)
 library(tabnet)
 library(torch)
+library(parallel)
 
-set.seed(1234)
+set.seed(52)
 
 source("david/plot_tuning_metrics.R")
 
@@ -38,13 +39,21 @@ turbines %>%
 
 dev.off()
 
+jpeg(file="david/hub_height_density.jpeg")
+
+turbines_recoded %>% 
+  ggplot(aes(x = hub_height_m)) +
+  geom_density()
+
+dev.off()
+
 #########################################################
 # Start here                                            #
 #########################################################
 
 # First, split the data between a training and test set:
 turbines_split <- initial_split(turbines_recoded,
-                                prop = 0.75,
+                                prop = 0.80,
                                 strata = turbine_capacity)
 
 train <- training(turbines_split)
@@ -67,11 +76,9 @@ metrics_list <- metric_set(accuracy, precision, recall, roc_auc)
 # * Tune the following hyperparameter: `learn_rate``;
 # * Use the ``torch`` package;
 
-cores <- parallel::detectCores()
+cores <- detectCores()
 
-
-
-nn_model <- tabnet(learn_rate = tune(), num_steps = tune()) %>% 
+nn_model <- tabnet(learn_rate = tune()) %>% 
   set_engine("torch", num.threads = cores) %>% 
   set_mode("classification")
 
@@ -90,7 +97,7 @@ turbines_folds <- vfold_cv(train, v = 3,
 
 # Create a regular grid of with 5 levels to tune your hyperparameters:
 
-nn_grid <- grid_random(parameters(learn_rate(), num_steps() %>% range_set(c(2, 6))), size = 5)
+nn_grid <- grid_regular(learn_rate(), levels = 5)
 
 
 # Tune your hyperparameters:
