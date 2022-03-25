@@ -1,8 +1,6 @@
 # Chocolate Analysis
 
 
-## Exploratory data analysis
-
 ## Random Forest Model
 
 ![](Rplotchocolatemtry.jpeg)

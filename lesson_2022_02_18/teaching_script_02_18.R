@@ -7,6 +7,9 @@ library(glmnet)
 library(tidymodels)
 library(roxygen2)
 # library(finetune)
+install.packages("tidyverse")
+install.packages("glmnet")
+install.packages("tidymodels")
 
 source("lesson_2022_02_18/chocolate_functions.R")
 
@@ -20,12 +23,27 @@ chocolate <- read_csv('https://raw.githubusercontent.com/rfordatascience/tidytue
 <<<<<<< HEAD
 <<<<<<< HEAD
 summary(chocolate)
+str(chocolate)
+
+chocolate %>% 
+  ggplot(aes(x = rating)) + 
+  geom_density()
+
+chocolate %>% 
+  count(country_of_bean_origin) %>% 
+  ggplot(aes(x = reorder(country_of_bean_origin, n), y = n)) +
+  geom_col()
+
+=======
+<<<<<<< HEAD
+summary(chocolate)
 
 chocolate %>% 
   count(country_of_bean_origin) %>% 
   ggplot(aes(x= reorder(country_of_bean_origin,n), y=n))+
   geom_col()
 =======
+>>>>>>> f9a8afaf6063b38c5d84e142573f7394f061fa2a
 =======
 head(chocolate)
 <<<<<<< HEAD
@@ -77,7 +95,11 @@ ggplot(aes(x = reorder (country_of_bean_origin, n), y = n))+
   geom_col()
 =======
 # Plot the top 20 countries of bean origin by number of observations
+<<<<<<< HEAD
+>>>>>>> a1652c685e56c6932184f9a250f529b60b281493
+=======
 >>>>>>> 42eed790438f9e7dc1211c7686833711ea6fc454
+>>>>>>> f9a8afaf6063b38c5d84e142573f7394f061fa2a
 chocolate %>% 
   count(country_of_bean_origin) %>% 
   arrange(desc(n)) %>% 
@@ -89,6 +111,13 @@ chocolate %>%
   
 =======
   ggplot(aes(x = reorder(country_of_bean_origin, n), y = n)) +
+<<<<<<< HEAD
+  geom_col(fill = "pink") +
+  coord_flip()+
+  theme_bw()+
+  xlab("country")
+
+=======
   geom_col(fill = "darkblue") +
   coord_flip() +
   theme_bw() +
@@ -112,11 +141,18 @@ coord_flip()+
   
 =======
 # Plot the top 20 countries of bean origin by company location
+>>>>>>> a1652c685e56c6932184f9a250f529b60b281493
 chocolate %>% 
   count(company_location) %>% 
   arrange(desc(n)) %>% 
   head(20) %>% 
   ggplot(aes(x = reorder(company_location, n), y = n)) +
+<<<<<<< HEAD
+  geom_col(fill = "pink") +
+  coord_flip()+
+  theme_bw()+
+  xlab("country")
+=======
   geom_col(fill = "darkblue") +
   coord_flip() +
   theme_bw() +
@@ -143,6 +179,7 @@ chocolate %>%
   geom_density()
 
 >>>>>>> 42eed790438f9e7dc1211c7686833711ea6fc454
+>>>>>>> f9a8afaf6063b38c5d84e142573f7394f061fa2a
 
 >>>>>>> 42eed790438f9e7dc1211c7686833711ea6fc454
 # Clean the data
@@ -159,8 +196,14 @@ chocolate_clean <- chocolate %>%
   select(-ref, -specific_bean_origin_or_bar_name, -cocoa_percent, -rating, -obs_n)
 
 <<<<<<< HEAD
+view(chocolate_clean)
+
+dim(chocolate_clean)
+=======
+<<<<<<< HEAD
 ?clean_review_dates
 =======
+>>>>>>> f9a8afaf6063b38c5d84e142573f7394f061fa2a
 
 >>>>>>> 42eed790438f9e7dc1211c7686833711ea6fc454
 # Split the data between training and testing, assigning 80% to training and 20% to testing.
@@ -181,7 +224,7 @@ chocolate_folds <- vfold_cv(train, v = 5,
 chocolate_recipe <- recipe(high_rating ~ ., data = chocolate_clean) 
 
 # Create a list of performance metrics
-metrics_list <- metric_set(accuracy, precision, recall, roc_auc)
+metrics_list <- metric_set(roc_auc)
 
 
 ####################
@@ -253,6 +296,8 @@ lasso_final_perf <- metrics_list(lasso_predictions,
                                  estimate = .pred_class,
                                  .pred_high)
 
+<<<<<<< HEAD
+=======
 <<<<<<< HEAD
 
 
@@ -282,8 +327,15 @@ lasso_cv_results %>%
 =======
 lasso_final_perf
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+=======
+>>>>>>> f9a8afaf6063b38c5d84e142573f7394f061fa2a
+>>>>>>> 397c46e6d5d5e753d31162d1882dd6f77b741936
 
+<<<<<<< HEAD
+# Build a ridge model
+=======
 <<<<<<< HEAD
 # Build a rifge regression model
 
@@ -311,31 +363,40 @@ lasso_cv_results %>%
 
 ####################
 # Build a ridge regression model
+>>>>>>> a1652c685e56c6932184f9a250f529b60b281493
 
 # Create the model, defining the package ("engine") and the mode ("classification" or "regression")
-ridge_model <- logistic_reg(penalty = tune(), mixture = 0) %>% 
+lasso_model <- logistic_reg(penalty = tune(), mixture = 0) %>% 
   set_engine("glmnet") %>% 
   set_mode("classification")
 
-ridge_grid <- grid_regular(penalty(), levels = 50)
+lasso_grid <- grid_regular(penalty(), levels = 50)
 
 # Create the workflow, that brings together the model and the recipe
-ridge_wf <- workflow() %>% 
-  add_model(ridge_model) %>% 
+lasso_wf <- workflow() %>% 
+  add_model(lasso_model) %>% 
   add_recipe(chocolate_recipe)
 
 # Fit the workflow to the cross-validation groups
-ridge_cv_results <- ridge_wf %>% 
+lasso_cv_results <- lasso_wf %>% 
   tune_grid(resamples = chocolate_folds,
-            grid = ridge_grid,
+            grid = lasso_grid,
             metrics = metrics_list)
 
+<<<<<<< HEAD
+# Plot the hyperparameter tuning
+lasso_cv_results %>% 
+=======
 ridge_cv_results %>% 
 >>>>>>> 42eed790438f9e7dc1211c7686833711ea6fc454
+>>>>>>> a1652c685e56c6932184f9a250f529b60b281493
   plot_tuning_metrics(hyperparameter = "penalty", multiple = FALSE) +
   scale_x_log10()
 
 # Show the top 5 best models by AUC
+<<<<<<< HEAD
+lasso_cv_results %>% 
+=======
 <<<<<<< HEAD
 lasso_cv_results %>% 
   show_best(metric = "roc_auc")
@@ -357,35 +418,44 @@ lasso_predictions <- lasso_final_fit %>%
 conf_mat(lasso_predictions,
 =======
 ridge_cv_results %>% 
+>>>>>>> a1652c685e56c6932184f9a250f529b60b281493
   show_best(metric = "roc_auc")
 
 # Select the model wit the best AUC
-best_ridge_model <- ridge_cv_results %>% 
+best_lasso_model <- lasso_cv_results %>% 
   select_best(metric = "roc_auc") 
 
 # Fit the best model to the data
-ridge_final_fit <- wf %>% 
-  finalize_workflow(best_ridge_model) %>% 
+lasso_final_fit <- lasso_wf %>% 
+  finalize_workflow(best_lasso_model) %>% 
   last_fit(split = chocolate_split)
 
 # Collect the predictions
-ridge_predictions <- ridge_final_fit %>% 
+lasso_predictions <- lasso_final_fit %>% 
   collect_predictions()
 
 # Draw a heatmap for the confusion matrix:
+<<<<<<< HEAD
+conf_mat(lasso_predictions,
+=======
 conf_mat(ridge_predictions,
 >>>>>>> 42eed790438f9e7dc1211c7686833711ea6fc454
+>>>>>>> a1652c685e56c6932184f9a250f529b60b281493
          truth = high_rating,
          estimate = .pred_class) %>% 
-  # Create a heat map
-  autoplot(type = "heatmap")
+# Create a heat map
+autoplot(type = "heatmap")
 
 # Draw a ROC curve
 <<<<<<< HEAD
 lasso_predictions %>% 
 =======
+<<<<<<< HEAD
+lasso_predictions %>% 
+=======
 ridge_predictions %>% 
 >>>>>>> 42eed790438f9e7dc1211c7686833711ea6fc454
+>>>>>>> a1652c685e56c6932184f9a250f529b60b281493
   roc_curve(truth = high_rating, .pred_high) %>% 
   autoplot()
 
@@ -399,8 +469,12 @@ lasso_final_perf <- metrics_list(lasso_predictions,
 =======
 >>>>>>> a1652c685e56c6932184f9a250f529b60b281493
 =======
+<<<<<<< HEAD
+lasso_final_perf <- metrics_list(lasso_predictions,
+=======
 ridge_final_perf <- metrics_list(ridge_predictions,
 >>>>>>> 42eed790438f9e7dc1211c7686833711ea6fc454
+>>>>>>> a1652c685e56c6932184f9a250f529b60b281493
                                  truth = high_rating,
                                  estimate = .pred_class,
                                  .pred_high)
@@ -408,6 +482,8 @@ ridge_final_perf <- metrics_list(ridge_predictions,
 <<<<<<< HEAD
 =======
 
+<<<<<<< HEAD
+=======
 
 
 ####################
@@ -490,3 +566,4 @@ enet_final_perf %>%
   filter(.metric == "roc_auc") %>% 
   arrange(desc(.estimate))
 >>>>>>> 42eed790438f9e7dc1211c7686833711ea6fc454
+>>>>>>> a1652c685e56c6932184f9a250f529b60b281493
