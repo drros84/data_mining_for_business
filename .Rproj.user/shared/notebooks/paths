@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 /home/rstudio/data_mining_for_business/.Rproj.user/88635385/persistent-state="59885DBD"
 /home/rstudio/data_mining_for_business/.Rproj.user/shared/notebooks/paths="789A6352"
 /home/rstudio/data_mining_for_business/.gitignore="CDC514C0"
@@ -49,3 +50,5 @@
 /home/rstudio/data_mining_for_business/naira/neural_network.R="341F79AA"
 /home/rstudio/data_mining_for_business/naira/nfl_attendance.R="65FB35C7"
 /home/rstudio/data_mining_for_business/naira/turbines_report.md="F3D85BC9"
+=======
+>>>>>>> 397c46e6d5d5e753d31162d1882dd6f77b741936
