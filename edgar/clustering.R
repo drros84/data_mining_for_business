@@ -18,7 +18,11 @@ economic_data %>%
   dist() %>% 
   hclust() %>% 
   as.dendrogram() %>%
-  as.ggdend() 
+  set("labels_col", k = 5) %>%
+  set("branches_k_color", k = 5)%>%
+  as.ggdend() %>%
+  ggplot(horiz = TRUE) +
+  coord_polar(theta = "x")
 
 
 
