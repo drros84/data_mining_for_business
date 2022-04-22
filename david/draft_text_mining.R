@@ -4,6 +4,8 @@ library(wordcloud)
 library(tm)
 library(textstem)
 library(textdata)
+library(topicmodels)
+library(tidyverse)
 
 user_reviews <- read_tsv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-05-05/user_reviews.tsv")
 
@@ -220,3 +222,81 @@ tokenised_reviews %>%
   geom_boxplot(aes(fill = grade)) +
   geom_smooth(method = "lm", se = FALSE) +
   theme_bw()
+
+# Topic modelling
+
+reviews_dtm <- tokenised_reviews %>% 
+  anti_join(stop_words) %>% 
+  filter(!str_detect(word, "[0-9]")) %>% 
+  mutate(word = lemmatize_strings(word)) %>% 
+  filter(!(word %in% c("game", "animal", "crossing", "play", "player", "island"))) %>% 
+  count(user_name, date, word) %>% 
+  mutate(username_date = paste0(user_name, "_", "date")) %>% 
+  cast_dtm(username_date, word, n)
+
+reviews_lda <- LDA(reviews_dtm, k = 10, control = list(seed = "1234", alpha = 0.001))
+
+reviews_topics <- tidy(reviews_lda, matrix = "beta")
+
+reviews_topics %>% 
+  group_by(topic) %>% 
+  slice_max(beta, n = 5) %>% 
+  ungroup() %>% 
+  arrange(topic, -beta) %>% 
+  mutate(term = reorder_within(term, beta, topic)) %>% 
+  ggplot(aes(x = term, y = beta, fill = as.factor(topic))) +
+  geom_col() +
+  facet_wrap(~topic, scales = "free", ncol = 5) +
+  coord_flip() +
+  theme_bw() +
+  theme(legend.position = "none")
+
+topic_titles <- reviews_topics %>% 
+  group_by(topic) %>% 
+  slice_max(beta, n = 3) %>% 
+  mutate(row_n = row_number()) %>% 
+  ungroup() %>% 
+  select(-beta) %>% 
+  pivot_wider(names_from = "row_n", values_from = "term") %>% 
+  # select(-`4`) %>% 
+  mutate(title = paste(`1`, `2`, `3`, sep = "_")) %>% 
+  select(topic, title)
+
+
+reviews_docs <- tidy(reviews_lda, matrix = "gamma")
+
+reviews_gamma_sum <- reviews_docs %>% 
+  mutate(document = str_extract(document, "[a-z]+")) %>% 
+  group_by(document, topic) %>% 
+  summarise(mean = mean(gamma),
+            median = median(gamma),
+            sd = sd(gamma)) %>% 
+  ungroup()
+
+
+topic_order <- reviews_gamma_sum %>% 
+  left_join(topic_titles, by = "topic") %>% 
+  select(-topic) %>% 
+  rename(topic = title) %>% 
+  mutate(topic = as.factor(topic)) %>% 
+  group_by(topic) %>% 
+  summarise(order_n = sum(mean)) %>% 
+  ungroup() %>% 
+  arrange(desc(order_n)) 
+
+
+reviews_gamma_sum %>% 
+  left_join(topic_titles, by = "topic") %>% 
+  select(-topic) %>% 
+  rename(topic = title) %>% 
+  mutate(topic = as.factor(topic)) %>% 
+  left_join(topic_order, by = "topic") %>% 
+  ggplot(aes(x = document, y = reorder(topic, -order_n), fill = mean)) +
+  geom_tile() +
+  theme_bw() +
+  scale_fill_gradient(low = "white", high = "darkblue") +
+  theme(legend.position = "None") +
+  xlab("Readiness Assessment tool") +
+  ylab("Topic") +
+  ggtitle("Average topic intensity for Readiness Assessment tools")
+
