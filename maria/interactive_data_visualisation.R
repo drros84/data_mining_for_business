@@ -12,6 +12,14 @@ economic_data <- read_csv("https://raw.githubusercontent.com/drros84/euro_cluste
          productivity, unemployment = unemployment_rate, research_investment = GERD, govt_debt) %>% 
   na.omit() 
 
+xts_data <- economic_data %>% 
+  filter(year >= 2000) %>% 
+  # filter(country == "Greece") %>% 
+  filter(country %in% c("Greece", "Italy")) %>% 
+  select(year, country, inflation) %>% 
+  mutate(year = as.Date(paste0(year, "-01-01"))) %>% 
+  pivot_wider(names_from = country, values_from = inflation)
+
 economic_data %>% 
   filter(year == 2014) %>%
   arrange(desc(unemployment)) %>% 
@@ -19,6 +27,7 @@ economic_data %>%
   ggplot(aes(x = unemployment, y = inflation, col = country)) +
   geom_point(size = 4) +
   theme_bw()
+
 
 
 
