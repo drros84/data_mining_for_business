@@ -40,17 +40,20 @@ head(alc)
 # alc consumption plot
 p1 <- alc %>% 
   ggplot(aes(x = alcohol_consumption, y = continent, fill = continent)) +
-  geom_density_ridges(aes(alpha = .03))
+  geom_density_ridges(aes(alpha = .03)) +
+  theme(legend.position = "none")
 
 # gdp plot
 p2 <- alc %>% 
   ggplot(aes(x = gdp_per_cap, y = continent, fill = continent)) +
-  geom_density_ridges(aes(alpha = .03))
+  geom_density_ridges(aes(alpha = .03)) +
+  theme(legend.position = "none")
 
 # population plot
 p3 <- alc %>% 
   ggplot(aes(x = population_est, y = continent, fill = continent)) +
-  geom_density_ridges(aes(alpha = .03))
+  geom_density_ridges(aes(alpha = .03)) +
+  theme(legend.position = "none")
 p1 / p2 / p3
 
 
@@ -66,7 +69,7 @@ alc <- alc %>%
   mutate(alcohol_use = case_when(
     alcohol_consumption < 5 ~ "low",
     alcohol_consumption < 10 ~ "medium",
-    alcohol_consumption > 15 ~ "high"
+    alcohol_consumption > 12 ~ "high"
   ))
 
 
@@ -84,6 +87,12 @@ alc %>%
 # which countries in 2015 had high alcohol use?
 alc %>%
   filter(alcohol_use == "high") %>%
+  select(entity, continent)
+
+
+# which countries in 2015 had medium alcohol use?
+alc %>%
+  filter(alcohol_use == "medium") %>%
   select(entity, continent)
 
 # what countries had low alcohol use?
