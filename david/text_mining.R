@@ -5,6 +5,7 @@ library(wordcloud)
 library(tm)
 library(textstem)
 library(textdata)
+library(topicmodels)
 
 user_reviews <- read_tsv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-05-05/user_reviews.tsv")
 
@@ -83,8 +84,6 @@ tokenised_reviews %>%
                            TRUE ~"high")) %>% 
   anti_join(stop_words) %>% 
   filter(!str_detect(word, "[0-9]")) %>% 
-  # filter(word != "game") %>% 
-  # mutate(word = stem_strings(word)) %>% 
   mutate(word = lemmatize_strings(word)) %>%
   count(grade, word) %>%
   bind_tf_idf(word, grade, n) %>% 
@@ -100,3 +99,54 @@ tokenised_reviews %>%
   theme(axis.text = element_text(face = "bold",
                                  size = 12)) +
   facet_wrap(~grade, scales = "free")
+
+
+# Sentiment analysis
+tokenised_reviews %>% 
+  mutate(grade = case_when(grade < 4 ~ "low",
+                           grade < 8 ~ "avg",
+                           TRUE ~"high")) %>% 
+  anti_join(stop_words) %>% 
+  filter(!str_detect(word, "[0-9]")) %>% 
+  mutate(word = lemmatize_strings(word)) %>% 
+  inner_join(get_sentiments("afinn"), by = "word") %>% 
+  group_by(grade) %>% 
+  summarise(sentiment = mean(value))
+
+# Topic modelling
+
+reviews_dtm <- tokenised_reviews %>% 
+  anti_join(stop_words) %>% 
+  filter(!str_detect(word, "[0-9]")) %>% 
+  mutate(word = lemmatize_strings(word)) %>% 
+  filter(!(word %in% c("game",
+                       "animal",
+                       "crossing",
+                       "play",
+                       "player",
+                       "island"))) %>% 
+  count(user_name, date, word) %>% 
+  mutate(user_name_date = paste0(user_name,
+                                date)) %>% 
+  cast_dtm(user_name_date, word, n)
+
+reviews_lda <- LDA(reviews_dtm, k = 10,
+                   control = list(seed = "1234",
+                                  alpha = 0.001))
+
+reviews_topics <- tidy(reviews_lda, matrix = "beta")
+
+reviews_topics %>% 
+  group_by(topic) %>% 
+  slice_max(beta, n = 5) %>% 
+  ungroup() %>% 
+  ggplot(aes(x = reorder_within(term, beta, topic), y = beta,
+             fill = as.factor(topic))) +
+  geom_col() +
+  facet_wrap(~topic, scales = "free") +
+  coord_flip() +
+  theme_bw()  +
+  theme(legend.position = "none")
+
+
+
