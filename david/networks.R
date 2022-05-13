@@ -39,15 +39,6 @@ shortest_paths(erasmus_graph, "Hungary", "Germany")
 
 plot(erasmus_graph)
 
-degree.distribution(erasmus_graph) %>% 
-  hist()
-
-g <- sample_pa(200)
-plot(g)
-
-degree.distribution(g) %>% 
-  hist()
-
 data.frame(degree = degree(erasmus_graph)) %>% 
   rownames_to_column() %>% 
   rename(country = rowname) %>% 
@@ -57,7 +48,7 @@ data.frame(degree = degree(erasmus_graph)) %>%
   coord_flip()
 
 
-cluster_fast_greedy(erasmus_graph)
+# cluster_fast_greedy(erasmus_graph)
 
 
 nodes <- data.frame(label = unique(c(erasmus$sending_country_code,

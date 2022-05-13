@@ -25,11 +25,7 @@ links <- erasmus %>%
   left_join(nodes, by = c("sending_country_code" = "label")) %>% 
   select(from = id, receiving_country_code, students) %>% 
   left_join(nodes, by = c("receiving_country_code" = "label")) %>% 
-  select(from, to = id, students) %>% 
-  mutate(arrows = "to") %>% 
-  mutate(smooth = FALSE) %>% 
-  mutate(width = 1 + students/10) %>% 
-  mutate(color = "gray")
+  select(from, to = id, students) 
 
 
 
