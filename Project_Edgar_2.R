@@ -1,14 +1,15 @@
 
-#Your company owns a chain of stores across Russia that sell a variety of alcoholic drinks. 
+#Company owns a chain of stores across Russia that sell a variety of alcoholic drinks. 
 #The company recently ran a wine promotion in Saint Petersburg that was very successful. 
 #Due to the cost to the business, it isn’t possible to run the promotion in all regions.
 #The marketing team would like to target 10 other regions that have similar buying habits 
-#to Saint Petersburg where they would expect the promotion to be similarly successful.
+ #to Saint Petersburg where they would expect the promotion to be similarly successful.
 
 #The marketing team has sourced you with historical sales volumes per capita for several different drinks types.
 
 "year" - year (1998-2016)
-"region" - name of a federal subject of Russia. It could be oblast, republic, krai, autonomous okrug, federal city and a single autonomous oblast
+"region" - name of a federal subject of Russia. It could be oblast, 
+            republic, krai, autonomous okrug, federal city and a single autonomous oblast
 "wine" - sale of wine in litres by year per capita
 "beer" - sale of beer in litres by year per capita
 "vodka" - sale of vodka in litres by year per capita
@@ -72,7 +73,8 @@ data_clean %>%
     color = "Drinks"
   )
 
-#Chechen Republic and Republic of Ingushetia cannot be use on our model because them have a lot of missing values.
+#Chechen Republic and Republic of Ingushetia cannot be use on our model because them have a lot of 
+#missing values.
 #On the other hand, Republic of Crimea and Sevastopol only can be used if we consider the last 
 #three years and we plan to use more than this period, so, let's drop all data of them.
 
@@ -182,7 +184,8 @@ region_result <- data_cluster_tot %>%
 region_result %>% ggplot(aes(x = year, y = svc)) +
   geom_line(data = rename(region_result, region2 = region), aes(group = region2), color = "grey") +
   geom_line(color = "red") + 
-  geom_line(data = filter(rename(region_result, region2 = region), region2 == "Saint Petersburg"), aes(group = region2), color = "black") +
+  geom_line(data = filter(rename(region_result, region2 = region), region2 == "Saint Petersburg"), 
+            aes(group = region2), color = "black") +
   geom_hline(aes(yintercept = 0), linetype = "blank") +
   facet_wrap(~ region) +
   labs(
@@ -221,7 +224,8 @@ while (n > 11) {
   
   hc_mdl_cut2 <- cutree(hc_mdl2, k = k)
   
-  data_cluster_drink_filter_hc <- data_cluster_drink_filter %>% transmute(region, drink, cluster = hc_mdl_cut2)
+  data_cluster_drink_filter_hc <- data_cluster_drink_filter %>%
+    transmute(region, drink,cluster = hc_mdl_cut2)
   
   data_cluster_drink_filter_hc_filter <- data_cluster_drink_filter_hc %>%
     semi_join(
@@ -234,7 +238,8 @@ while (n > 11) {
 # Selecting the correct model
 hc_mdl_cut2 <- cutree(hc_mdl2, k = k)
 
-data_cluster_drink_filter_hc <- data_cluster_drink_filter %>% transmute(region, drink, cluster = hc_mdl_cut2)
+data_cluster_drink_filter_hc <- data_cluster_drink_filter %>% 
+  transmute(region, drink,  cluster = hc_mdl_cut2)
 
 data_cluster_drink_filter_hc_filter <- data_cluster_drink_filter_hc %>%
   semi_join(
@@ -249,8 +254,10 @@ drink_result <- data_cluster_drink %>%
          region_drink = str_c(region, drink, sep = " - "))
 
 drink_result %>% ggplot(aes(x = year, y = svc)) +
-  geom_line(data = rename(drink_result, region_drink2 = region_drink), aes(group = region_drink2), color = "grey") +
-  geom_line(data = filter(rename(drink_result, region_drink2 = region_drink), region == "Saint Petersburg"), aes(group = region_drink2), color = "black") +
+  geom_line(data = rename(drink_result, region_drink2 = region_drink),
+            aes(group = region_drink2), color = "grey") +
+  geom_line(data = filter(rename(drink_result, region_drink2 = region_drink),
+                          region == "Saint Petersburg"), aes(group = region_drink2), color = "black") +
   geom_line(color = "red")+
   geom_hline(aes(yintercept = 0), linetype = "blank") +
   facet_wrap(~ region_drink) +
@@ -268,24 +275,14 @@ kable(unique(select(drink_result, region, drink)),
       col.names = c("Regions","Drink"), caption = "Regions and drink select on 2nd steep")
 
 #Results
-#We select ten pairs of region and drink to run our promotion only using the data available. Before we present these results,
-#it is important to say some changes and improvements that could be made:
-  
-  #1.if more data is available, our model could be more robust. 
-      #Information about market in each region could show other results. 
-      #For example, number of customers, profits, taxes, logistics costs, 
-        #and many others, could be used to generate value for our analysis.
-
-  #2.other strategy could be apply with this same model is reduce the time window.
-    #For example, we can use different number of years and select the regions and drinks that appear more times.
-
-  #3.on the other hand, we could try other algorithm like k-means to cluster and them apply the same cut strategy.
+#We select ten pairs of region and drink to run our promotion 
 
 drink_result %>% 
   filter(region != "Saint Petersburg") %>%
   ggplot(aes(x = year, y = svc)) +
   geom_line(color = "red") +
-  geom_line(data = filter(rename(drink_result, region_drink2 = region_drink), region == "Saint Petersburg"), aes(group = region_drink2), color = "black")+
+  geom_line(data = filter(rename(drink_result, region_drink2 = region_drink), 
+                          region == "Saint Petersburg"), aes(group = region_drink2), color = "black")+
   geom_hline(aes(yintercept = 0), linetype = "blank") +
   facet_wrap(~ region_drink) +
   labs(
