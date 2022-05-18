@@ -1,0 +1,2 @@
+Download InstructionBank Direct Marketing CampaignFor this project, I will use secondary data. The source is the UCI Machine Learning Repository (UCI Machine Learning Repository, 2022).
+      Step 1: https://archive.ics.uci.edu/ml/datasets/Bank+Marketing      Step 2: Download:ÊData Folder,ÊData Set Description      Step 3: Go to Data Folder      Step 4: Choose bank-additional.zip      Step 5: Use bank-additional-full.csvUCI Machine Learning Repository. (2022, May 5). Retrieved from https://archive.ics.uci.edu/ml/datasets/Bank+Marketing      
