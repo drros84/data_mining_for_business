@@ -21,8 +21,8 @@ economic_data %>%
   set("labels_col", k = 5) %>%
   set("branches_k_color", k = 5)%>%
   as.ggdend() %>%
-  ggplot(horiz = TRUE) +
-  coord_polar(theta = "x")
+  ggplot(horiz = TRUE) 
+  #coord_polar(theta = "x")
 
 
 
