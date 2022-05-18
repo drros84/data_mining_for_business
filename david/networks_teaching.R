@@ -19,13 +19,42 @@ erasmus <- read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesd
 # For data viz
 nodes <- data.frame(label = unique(c(erasmus$sending_country_code,
                                      erasmus$receiving_country_code))) %>% 
-  mutate(id = row_number())
+  mutate(id = row_number()) %>% 
+  mutate(color = case_when(label == "France" ~ "red",
+                           label == "Germany" ~ "green",
+                           label == "Italy" ~ "orange",
+                           TRUE ~ "blue")) 
 
 links <- erasmus %>% 
   left_join(nodes, by = c("sending_country_code" = "label")) %>% 
   select(from = id, receiving_country_code, students) %>% 
   left_join(nodes, by = c("receiving_country_code" = "label")) %>% 
-  select(from, to = id, students) 
+  select(from, to = id, students) %>% 
+  mutate(arrows = "to") %>% 
+  mutate(smooth = FALSE) %>% 
+  mutate(width = students/10) %>% 
+  mutate(color = "gray")
+
+
+erasmus_graph <- erasmus %>%
+  graph_from_data_frame(directed = TRUE)
+
+plot(erasmus_graph)
+
+data.frame(degree = degree(erasmus_graph, mode = "in")) %>% 
+  rownames_to_column(var = "country") %>% 
+  ggplot(aes(x = reorder(country, degree), y = degree)) +
+  geom_col() +
+  coord_flip()
+
+shortest_paths(erasmus_graph, "Russia", "Germany")
+
+
+
+visNetwork(nodes, links)
+
+
+
 
 
 
