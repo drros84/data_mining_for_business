@@ -1,0 +1,165 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[
+]{article}
+\title{PROJECT\_A}
+\author{EDGAR}
+\date{5/17/2022}
+
+\usepackage{amsmath,amssymb}
+\usepackage{lmodern}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math}
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+\hypersetup{
+  pdftitle={PROJECT\_A},
+  pdfauthor={EDGAR},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+\urlstyle{same} % disable monospaced font for URLs
+\usepackage[margin=1in]{geometry}
+\usepackage{graphicx}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+% Set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{5}
+\ifLuaTeX
+  \usepackage{selnolig}  % disable illegal ligatures
+\fi
+
+\begin{document}
+\maketitle
+
+{
+\setcounter{tocdepth}{2}
+\tableofcontents
+}
+library(tidyverse) library(janitor) library(ggridges) library(patchwork)
+
+\hypertarget{import-data}{%
+\section{import data}\label{import-data}}
+
+alc \textless- read\_csv (``alcohol-consumption-vs-gdp-per-capita.csv'')
+
+\hypertarget{clean-data-and-rename-vars}{%
+\section{clean data and rename vars}\label{clean-data-and-rename-vars}}
+
+alc \textless- alc \%\textgreater\% clean\_names() \%\textgreater\% \#
+clean up column names mutate(alcohol\_consumption =
+total\_alcohol\_consumption\_per\_capita\_liters\_of\_pure\_alcohol\_projected\_estimates\_15\_years\_of\_age)
+\%\textgreater\% \# shortening column name mutate(gdp\_per\_cap =
+gdp\_per\_capita\_ppp\_constant\_2017\_international) \%\textgreater\%
+\# shortening column name mutate(population\_est =
+population\_historical\_estimates) \%\textgreater\% \# shortening column
+name select(entity, year, alcohol\_consumption, gdp\_per\_cap,
+population\_est, continent) \%\textgreater\% \# selecting wanted columns
+drop\_na() \%\textgreater\% \# remove n/a's filter(year == 2015) \#
+filter for year - 2015
+
+\hypertarget{view-data}{%
+\section{view data}\label{view-data}}
+
+head(alc)
+
+\hypertarget{visualize-explore-data}{%
+\section{visualize / explore data}\label{visualize-explore-data}}
+
+\hypertarget{alc-consumption-plot}{%
+\section{alc consumption plot}\label{alc-consumption-plot}}
+
+p1 \textless- alc \%\textgreater\% ggplot(aes(x = alcohol\_consumption,
+y = continent, fill = continent)) + geom\_density\_ridges(aes(alpha =
+.03)) + theme(legend.position = ``none'')
+
+\hypertarget{gdp-plot}{%
+\section{gdp plot}\label{gdp-plot}}
+
+p2 \textless- alc \%\textgreater\% ggplot(aes(x = gdp\_per\_cap, y =
+continent, fill = continent)) + geom\_density\_ridges(aes(alpha = .03))
++ theme(legend.position = ``none'')
+
+\hypertarget{population-plot}{%
+\section{population plot}\label{population-plot}}
+
+p3 \textless- alc \%\textgreater\% ggplot(aes(x = population\_est, y =
+continent, fill = continent)) + geom\_density\_ridges(aes(alpha = .03))
++ theme(legend.position = ``none'') p1 / p2 / p3
+
+alc \%\textgreater\% ggplot(aes(x = log(population\_est), y =
+gdp\_per\_cap)) + geom\_point(aes(color = alcohol\_consumption)) +
+facet\_wrap(\textasciitilde continent)
+
+\#analysis alc \textless- alc \%\textgreater\% mutate(alcohol\_use =
+case\_when( alcohol\_consumption \textless{} 5 \textasciitilde{}
+``low'', alcohol\_consumption \textless{} 10 \textasciitilde{}
+``medium'', alcohol\_consumption \textgreater{} 12 \textasciitilde{}
+``high'' ))
+
+head(alc)
+
+alc \%\textgreater\% drop\_na() \%\textgreater\% ggplot(aes(x =
+log(population\_est), y = gdp\_per\_cap)) + geom\_jitter(aes(color =
+alcohol\_use)) + facet\_wrap(\textasciitilde alcohol\_use, nrow = 2)
+
+\hypertarget{which-countries-in-2015-had-high-alcohol-use}{%
+\section{which countries in 2015 had high alcohol
+use?}\label{which-countries-in-2015-had-high-alcohol-use}}
+
+alc \%\textgreater\% filter(alcohol\_use == ``high'') \%\textgreater\%
+select(entity, continent)
+
+\hypertarget{which-countries-in-2015-had-medium-alcohol-use}{%
+\section{which countries in 2015 had medium alcohol
+use?}\label{which-countries-in-2015-had-medium-alcohol-use}}
+
+alc \%\textgreater\% filter(alcohol\_use == ``medium'') \%\textgreater\%
+select(entity, continent)
+
+\hypertarget{what-countries-had-low-alcohol-use}{%
+\section{what countries had low alcohol
+use?}\label{what-countries-had-low-alcohol-use}}
+
+alc \%\textgreater\% filter(alcohol\_use == ``low'') \%\textgreater\%
+select(entity, continent)
+
+\end{document}

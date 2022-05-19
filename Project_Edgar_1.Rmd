@@ -3,13 +3,12 @@ title: "PROJECT_A"
 author: "EDGAR"
 date: "5/17/2022"
 output:
+  word_document: default
+  html_document: default
   pdf_document: 
     toc: yes
     number_sections: yes
     keep_tex: yes
-  word_document: default
-  html_document: default
-  pdf_document: default
 ---
 
 
